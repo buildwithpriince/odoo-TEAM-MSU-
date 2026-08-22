@@ -16,13 +16,15 @@ import { Profile } from './pages/Profile';
 import { CalendarView } from './pages/CalendarView';
 import { AdminPage } from './pages/AdminPage';
 import { CommunityPage } from './pages/CommunityPage';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 export default function App() {
   return (
-    <AuthProvider>
-      <CurrencyProvider>
-        <TripProvider>
-          <BrowserRouter>
+    <ErrorBoundary>
+      <AuthProvider>
+        <CurrencyProvider>
+          <TripProvider>
+            <BrowserRouter>
             <Routes>
               {/* Standalone Authentication Route */}
               <Route path="/login" element={<Login />} />
@@ -70,5 +72,6 @@ export default function App() {
         </TripProvider>
       </CurrencyProvider>
     </AuthProvider>
+    </ErrorBoundary>
   );
 }
