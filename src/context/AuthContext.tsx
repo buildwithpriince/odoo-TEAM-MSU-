@@ -1,11 +1,17 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '../types';
 
+interface AuthResult {
+  success: boolean;
+  error?: string;
+}
+
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
-  login: (email: string, name?: string) => void;
-  signup: (email: string, name: string) => void;
+  isAdmin: boolean;
+  login: (email: string) => AuthResult;
+  signup: (email: string, name: string) => AuthResult;
   logout: () => void;
   updateProfile: (updatedData: Partial<User>) => void;
   loginAsAdmin: () => void;
@@ -59,22 +65,32 @@ const saveRegisteredUsers = (users: Record<string, User>) => {
 
 const normalizeEmail = (email: string) => email.trim().toLowerCase();
 
-// Seed the demo account into the registry so "sign in" with the demo email
-// also resolves correctly through the same lookup path.
-const ensureDemoUserSeeded = () => {
+// Seed the demo traveler + demo admin into the registry so signing in with
+// either demo email also resolves correctly through the same lookup path.
+const ensureDemoUsersSeeded = () => {
   const users = loadRegisteredUsers();
-  const key = normalizeEmail(DEFAULT_TRAVELER_USER.email);
-  if (!users[key]) {
-    users[key] = DEFAULT_TRAVELER_USER;
-    saveRegisteredUsers(users);
+  let changed = false;
+
+  const travelerKey = normalizeEmail(DEFAULT_TRAVELER_USER.email);
+  if (!users[travelerKey]) {
+    users[travelerKey] = DEFAULT_TRAVELER_USER;
+    changed = true;
   }
+
+  const adminKey = normalizeEmail(DEFAULT_ADMIN_USER.email);
+  if (!users[adminKey]) {
+    users[adminKey] = DEFAULT_ADMIN_USER;
+    changed = true;
+  }
+
+  if (changed) saveRegisteredUsers(users);
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   useEffect(() => {
-    ensureDemoUserSeeded();
+    ensureDemoUsersSeeded();
   }, []);
 
   const [user, setUser] = useState<User | null>(() => {
@@ -83,18 +99,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         const parsed = JSON.parse(saved);
         if (parsed && parsed.email) {
-          // Normalize role if not present
           if (!parsed.role) {
             parsed.role = parsed.email.toLowerCase().includes('admin') ? 'admin' : 'traveler';
           }
           return parsed;
         }
-        return DEFAULT_TRAVELER_USER;
+        return null;
       } catch {
-        return DEFAULT_TRAVELER_USER;
+        return null;
       }
     }
-    return DEFAULT_TRAVELER_USER; // Default logged in for smooth preview experience
+    return null;
   });
 
   useEffect(() => {
@@ -105,18 +120,43 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [user]);
 
-  const login = (email: string, name?: string) => {
-    const displayName = name || (email.split('@')[0].charAt(0).toUpperCase() + email.split('@')[0].slice(1));
-    setUser({
+  const signup = (email: string, name: string): AuthResult => {
+    const key = normalizeEmail(email);
+    const users = loadRegisteredUsers();
+
+    if (users[key]) {
+      return { success: false, error: 'An account with this email already exists. Please sign in instead.' };
+    }
+
+    const newUser: User = {
       id: 'usr-' + Date.now(),
-      name: displayName,
-      email,
+      name: name.trim(),
+      email: email.trim(),
       avatarUrl: DEFAULT_TRAVELER_USER.avatarUrl,
-      homeCity: 'New York, NY',
+      homeCity: '',
       currency: 'USD',
       bio: 'Ready for my next adventure!',
-      savedDestinations: []
-    });
+      savedDestinations: [],
+      role: 'traveler'
+    };
+
+    users[key] = newUser;
+    saveRegisteredUsers(users);
+    setUser(newUser);
+    return { success: true };
+  };
+
+  const login = (email: string): AuthResult => {
+    const key = normalizeEmail(email);
+    const users = loadRegisteredUsers();
+    const found = users[key];
+
+    if (!found) {
+      return { success: false, error: 'No account found for this email. Please sign up first.' };
+    }
+
+    setUser(found);
+    return { success: true };
   };
 
   const loginAsAdmin = () => {
@@ -125,10 +165,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const loginAsTraveler = () => {
     setUser(DEFAULT_TRAVELER_USER);
-  };
-
-  const signup = (email: string, name: string) => {
-    login(email, name);
   };
 
   const logout = () => {
@@ -140,8 +176,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (!prev) return null;
       const updated = { ...prev, ...updatedData };
 
-      // Keep the registered-users registry in sync so future logins reflect
-      // the latest saved profile data too.
       const users = loadRegisteredUsers();
       const key = normalizeEmail(updated.email);
       users[key] = updated;
