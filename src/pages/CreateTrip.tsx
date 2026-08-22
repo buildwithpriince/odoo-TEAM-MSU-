@@ -18,8 +18,10 @@ import {
 import { useTrip } from '../context/TripContext';
 import { CityStop } from '../types';
 import { POPULAR_DESTINATIONS } from '../data/mockData';
+import { useCurrency } from '../context/CurrencyContext';
 
 export const CreateTrip: React.FC = () => {
+  const { currency } = useCurrency();
   const [searchParams] = useSearchParams();
   const destIdParam = searchParams.get('destId');
   const cityParam = searchParams.get('city');
@@ -325,7 +327,7 @@ export const CreateTrip: React.FC = () => {
 
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-[#6B5E55] mb-1.5" htmlFor="trip-budget">
-                  Target Budget ($ USD)
+                  Target Budget ({currency === 'INR' ? '₹' : '$'})
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#8F8175]">
@@ -346,86 +348,95 @@ export const CreateTrip: React.FC = () => {
           </div>
 
           {/* Section: Multi-City Stops */}
-          <div className="space-y-4 pt-4 border-t border-[#EAE2D5]">
+          <div className="space-y-6 pt-6 border-t border-[#EAE2D5]">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="font-serif-heading text-lg font-bold text-[#2C221E]">
                   2. Multi-City Stops & Route Sequence
                 </h2>
-                <p className="text-xs text-[#8F8175]">
-                  Add all intermediate cities or destinations on your route
+                <p className="text-xs text-[#8F8175] mt-0.5">
+                  Design your journey's trajectory and intermediate destinations
                 </p>
               </div>
-              <span className="text-xs font-bold px-2.5 py-1 rounded-lg bg-[#F0EAE1] text-[#6B5E55]">
+              <span className="text-xs font-bold px-3 py-1 rounded-full bg-[#F0EAE1] text-[#6B5E55] border border-[#E3D9CB]">
                 {stops.length} Stops Configured
               </span>
             </div>
 
-            {/* Stops list with reordering/removal */}
-            <div className="space-y-2.5">
+            {/* Stops list with timeline connectors */}
+            <div className="relative pl-1 sm:pl-4 space-y-4">
+              {/* Vertical line connector */}
+              <div className="absolute top-8 bottom-12 left-[1.4rem] sm:left-[2.15rem] w-px bg-gradient-to-b from-[#964223] via-[#D9CBBA] to-transparent pointer-events-none" />
+              
               {stops.map((stop, idx) => (
                 <div 
                   key={stop.id}
-                  className="flex items-center justify-between p-3.5 rounded-xl bg-[#FAF7F2] border border-[#E0D7C8] transition-all"
+                  className="relative flex items-center gap-3 sm:gap-5 group"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="w-7 h-7 rounded-lg bg-[#EAE2D5] text-[#2C221E] font-serif-heading font-bold text-xs flex items-center justify-center">
-                      {idx + 1}
-                    </div>
-                    <div>
-                      <p className="font-semibold text-sm text-[#2C221E]">{stop.cityName}</p>
-                      <p className="text-[11px] text-[#8F8175]">{stop.country}</p>
-                    </div>
+                  {/* Step Badge */}
+                  <div className="relative z-10 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white border-2 border-[#964223] text-[#964223] font-serif-heading font-bold text-sm flex items-center justify-center shadow-sm shrink-0">
+                    {idx + 1}
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    {idx === 0 && (
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-100/60 px-2 py-0.5 rounded-md">
-                        Start Point
-                      </span>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveStop(stop.id)}
-                      className="p-1.5 text-[#8F8175] hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
-                      title="Remove stop"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                  {/* Stop Card */}
+                  <div className="flex-1 flex items-center justify-between p-3.5 sm:p-5 rounded-2xl bg-white border border-[#E0D7C8] shadow-[0_2px_8px_rgb(0,0,0,0.02)] transition-all group-hover:shadow-[0_4px_12px_rgb(0,0,0,0.06)] group-hover:border-[#D9CBBA]">
+                    <div className="flex items-center gap-3">
+                      <div>
+                        <p className="font-semibold text-sm sm:text-base text-[#2C221E]">{stop.cityName}</p>
+                        <p className="text-[11px] sm:text-xs text-[#8F8175] mt-0.5">{stop.country}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      {idx === 0 && (
+                        <span className="hidden sm:inline-block text-[10px] font-bold uppercase tracking-widest text-[#964223] bg-[#964223]/10 px-3 py-1 rounded-full">
+                          Departure
+                        </span>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveStop(stop.id)}
+                        className="p-2 text-[#8F8175] hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100"
+                        title="Remove stop"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
-            </div>
 
-            {/* Quick Add Stop Input */}
-            <div className="p-4 rounded-2xl bg-[#F0EAE1]/70 border border-[#E3D9CB] space-y-3">
-              <span className="text-xs font-bold text-[#6B5E55] block">
-                + Add Another Stop to Circuit
-              </span>
-              <div className="grid grid-cols-1 sm:grid-cols-5 gap-2.5">
-                <div className="sm:col-span-3">
-                  <input
-                    type="text"
-                    placeholder="City Name (e.g. Manali)"
-                    value={newCity}
-                    onChange={(e) => setNewCity(e.target.value)}
-                    className="w-full px-3.5 py-2 bg-white border border-[#D9CBBA] rounded-xl text-xs text-[#2C221E] focus:outline-hidden focus:ring-2 focus:ring-[#964223]/30"
-                  />
+              {/* Quick Add Stop Input within timeline */}
+              <div className="relative flex items-center gap-3 sm:gap-5 mt-2">
+                <div className="relative z-10 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-[#FAF7F2] border-2 border-dashed border-[#D9CBBA] text-[#D9CBBA] flex items-center justify-center shrink-0">
+                  <Plus className="w-4 h-4" />
                 </div>
-                <div className="sm:col-span-2 flex gap-2">
-                  <input
-                    type="text"
-                    placeholder="Country (e.g. India)"
-                    value={newCountry}
-                    onChange={(e) => setNewCountry(e.target.value)}
-                    className="w-full px-3.5 py-2 bg-white border border-[#D9CBBA] rounded-xl text-xs text-[#2C221E] focus:outline-hidden focus:ring-2 focus:ring-[#964223]/30"
-                  />
+                
+                <div className="flex-1 flex flex-col sm:flex-row items-stretch sm:items-center p-2 rounded-2xl bg-[#FAF7F2] border border-dashed border-[#D9CBBA] focus-within:border-[#964223]/50 focus-within:bg-white focus-within:shadow-[0_2px_8px_rgb(0,0,0,0.04)] transition-all gap-2">
+                  <div className="flex-1 flex flex-col sm:flex-row items-stretch sm:items-center divide-y sm:divide-y-0 sm:divide-x divide-[#EAE2D5]">
+                    <input
+                      type="text"
+                      placeholder="Next city (e.g. Kyoto)"
+                      value={newCity}
+                      onChange={(e) => setNewCity(e.target.value)}
+                      className="w-full px-3.5 py-2.5 bg-transparent border-none text-sm text-[#2C221E] focus:outline-hidden placeholder:text-[#8F8175]"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Country (optional)"
+                      value={newCountry}
+                      onChange={(e) => setNewCountry(e.target.value)}
+                      className="w-full px-3.5 py-2.5 bg-transparent border-none text-sm text-[#2C221E] focus:outline-hidden placeholder:text-[#8F8175]"
+                    />
+                  </div>
                   <button
                     type="button"
                     onClick={handleAddStop}
-                    className="px-3.5 py-2 rounded-xl bg-[#2C221E] text-white text-xs font-bold hover:bg-black transition-colors shrink-0"
+                    className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#2C221E] text-white hover:bg-black transition-colors shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={!newCity.trim()}
                   >
-                    Add
+                    <Plus className="w-4 h-4" />
+                    <span className="sm:hidden text-xs font-bold">Add Stop</span>
                   </button>
                 </div>
               </div>

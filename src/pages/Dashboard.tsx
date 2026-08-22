@@ -20,12 +20,14 @@ import {
 } from 'lucide-react';
 import { useTrip } from '../context/TripContext';
 import { useAuth } from '../context/AuthContext';
+import { useCurrency } from '../context/CurrencyContext';
 import { DynamicDestinationHero } from '../components/DynamicDestinationHero';
 import { POPULAR_DESTINATIONS } from '../data/mockData';
 
 export const Dashboard: React.FC = () => {
   const { user } = useAuth();
   const { trips, deleteTrip, duplicateTrip } = useTrip();
+  const { formatPrice } = useCurrency();
   const navigate = useNavigate();
 
   const totalStops = trips.reduce((sum, t) => sum + (t.stops?.length || 0), 0);
@@ -110,25 +112,25 @@ export const Dashboard: React.FC = () => {
               <DollarSign className="w-4 h-4" />
             </div>
           </div>
-          <p className="font-serif-heading text-3xl font-bold text-[#2C221E]">${totalBudgeted.toLocaleString()}</p>
+          <p className="font-serif-heading text-3xl font-bold text-[#2C221E]">{formatPrice(totalBudgeted)}</p>
           <p className="text-xs text-[#8F8175] mt-0.5">Tracked & synchronized</p>
         </div>
       </section>
 
       {/* Your Current Journeys Section */}
-      <section className="space-y-5">
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 pb-1 border-b border-[#EAE2D5]">
+      <section className="space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 pb-2 border-b border-[#EAE2D5]">
           <div>
             <span className="text-xs font-bold uppercase tracking-widest text-[#964223]">Itinerary Management</span>
             <h2 className="font-serif-heading text-2xl sm:text-3xl font-bold text-[#2C221E] mt-0.5">
-              Your Current Journeys
+              Your Active Itineraries
             </h2>
           </div>
           <div className="flex items-center gap-3">
             <Link 
               to="/trips/new"
               id="dashboard-create-journey-btn"
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#964223] hover:bg-[#7D351B] text-[#FAF7F2] text-xs font-bold transition-all shadow-xs"
+              className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-[#964223] hover:bg-[#7D351B] text-[#FAF7F2] text-xs font-bold transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Create New Journey</span>
@@ -136,7 +138,7 @@ export const Dashboard: React.FC = () => {
             <Link 
               to="/trips" 
               id="view-all-trips-link"
-              className="text-xs font-bold text-[#964223] hover:underline flex items-center gap-1"
+              className="text-xs font-bold text-[#964223] hover:text-[#7D351B] transition-colors flex items-center gap-1"
             >
               <span>View All</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -145,20 +147,20 @@ export const Dashboard: React.FC = () => {
         </div>
 
         {trips.length === 0 ? (
-          <div className="editorial-card p-12 text-center space-y-4">
-            <div className="w-16 h-16 rounded-3xl bg-[#F0EAE1] text-[#964223] flex items-center justify-center mx-auto">
+          <div className="editorial-card p-12 text-center space-y-5 shadow-sm border border-[#E0D7C8]">
+            <div className="w-16 h-16 rounded-3xl bg-[#F0EAE1] text-[#964223] flex items-center justify-center mx-auto shadow-inner">
               <Luggage className="w-8 h-8" />
             </div>
-            <h3 className="font-serif-heading text-xl font-bold text-[#2C221E]">No journeys planned yet</h3>
-            <p className="text-sm text-[#6B5E55] max-w-md mx-auto">
-              Select a featured destination above or create your custom multi-city itinerary from scratch.
+            <h3 className="font-serif-heading text-2xl font-bold text-[#2C221E]">No journeys planned yet</h3>
+            <p className="text-sm text-[#6B5E55] max-w-md mx-auto leading-relaxed">
+              Begin drafting your next adventure. Select a featured destination above to use as a starting template, or build a custom multi-city itinerary from scratch.
             </p>
             <Link
               to="/trips/new"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-[#964223] text-white text-xs font-bold"
+              className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-[#964223] text-white text-xs font-bold shadow-md hover:bg-[#7D351B] transition-all hover:-translate-y-0.5"
             >
               <Plus className="w-4 h-4" />
-              <span>Start Planning Your First Trip</span>
+              <span>Draft Your First Itinerary</span>
             </Link>
           </div>
         ) : (
@@ -251,7 +253,7 @@ export const Dashboard: React.FC = () => {
                         <div className="flex items-center justify-between text-xs">
                           <span className="text-[#8F8175] font-medium">Budget Tracked:</span>
                           <span className="font-semibold text-[#2C221E]">
-                            ${effectiveCost.toLocaleString()} / <span className="text-[#8F8175]">${trip.totalBudget?.toLocaleString()}</span>
+                            {formatPrice(effectiveCost)} / <span className="text-[#8F8175]">{formatPrice(trip.totalBudget || 0)}</span>
                           </span>
                         </div>
                         <div className="w-full h-2 bg-[#EBE4D5] rounded-full overflow-hidden">
@@ -294,68 +296,78 @@ export const Dashboard: React.FC = () => {
       </section>
 
       {/* Curated Multi-City Circuit Ideas */}
-      <section className="space-y-4 pt-4">
-        <div className="flex items-center justify-between">
+      <section className="space-y-6 pt-6">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
           <div>
             <span className="text-xs font-bold uppercase tracking-widest text-[#964223]">Inspiration</span>
-            <h2 className="font-serif-heading text-2xl font-bold text-[#2C221E] mt-0.5">
-              Popular Multi-City Circuits
+            <h2 className="font-serif-heading text-2xl sm:text-3xl font-bold text-[#2C221E] mt-0.5">
+              Curated Multi-City Circuits
             </h2>
-            <p className="text-xs text-[#8F8175]">Handcrafted journey routes with optimal train & scenic links</p>
+            <p className="text-sm text-[#8F8175] mt-1">Handcrafted journey routes with optimal train & scenic links</p>
           </div>
           <Link
             to="/explore"
-            className="text-xs font-bold text-[#964223] hover:underline flex items-center gap-1"
+            className="text-xs font-bold text-[#964223] hover:text-[#7D351B] transition-colors flex items-center gap-1"
           >
             <span>Explore All Cities</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {POPULAR_DESTINATIONS.slice(0, 3).map((dest) => (
             <div 
               key={dest.id}
-              className="editorial-card-hover p-5 flex flex-col justify-between"
+              className="group flex flex-col justify-between overflow-hidden cursor-pointer bg-white rounded-3xl border border-[#E0D7C8] shadow-[0_4px_16px_rgb(0,0,0,0.04)] hover:shadow-[0_12px_32px_rgb(0,0,0,0.08)] transition-all duration-300"
             >
               <div>
-                <div className="relative h-36 rounded-2xl overflow-hidden mb-4">
+                <div className="relative h-48 sm:h-56 w-full overflow-hidden bg-[#1E140F]">
                   <img 
                     src={dest.image} 
                     alt={dest.name}
-                    className="w-full h-full object-cover" 
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" 
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-                  <span className="absolute bottom-2.5 left-3 text-white font-serif-heading font-bold text-base">
-                    {dest.name} Circuit
+                  <div className={`absolute inset-0 bg-gradient-to-t ${dest.heroGradient} opacity-50 mix-blend-multiply pointer-events-none`} />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
+                  
+                  <span className="absolute top-4 right-4 px-3 py-1.5 rounded-full bg-black/40 backdrop-blur-md text-emerald-300 text-[11px] font-bold border border-white/10 shadow-xs flex items-center gap-1">
+                    <DollarSign className="w-3 h-3 text-emerald-400" />
+                    {formatPrice(dest.averageDailyCost)}/d
                   </span>
-                  <span className="absolute top-2.5 right-3 px-2 py-0.5 rounded-md bg-black/50 text-white text-[10px] font-bold">
-                    ${dest.averageDailyCost}/day
-                  </span>
+
+                  <div className="absolute bottom-4 left-5 right-5 text-white">
+                    <h3 className="font-serif-heading text-2xl font-bold leading-none drop-shadow-md">
+                      {dest.name} Circuit
+                    </h3>
+                  </div>
                 </div>
 
-                <div className="space-y-2">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#8F8175]">
-                    Suggested Multi-Stop Trail:
-                  </span>
-                  <p className="text-xs font-semibold text-[#2C221E]">
-                    {(dest.curatedStops || [dest.name]).join(' → ')}
-                  </p>
-                  <p className="text-xs text-[#6B5E55] line-clamp-2 leading-relaxed">
+                <div className="p-5 sm:p-6 space-y-4">
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#8F8175] block mb-1.5">
+                      Suggested Route
+                    </span>
+                    <p className="text-xs font-semibold text-[#2C221E] bg-[#FAF7F2] p-3 rounded-xl border border-[#EAE2D5]">
+                      {(dest.curatedStops || [dest.name]).join(' → ')}
+                    </p>
+                  </div>
+                  <p className="text-sm text-[#6B5E55] line-clamp-2 leading-relaxed">
                     {dest.tagline}
                   </p>
                 </div>
               </div>
 
-              <div className="pt-4 mt-4 border-t border-[#EAE2D5] flex items-center justify-between">
-                <span className="text-[11px] text-[#8F8175]">
-                  Best season: <span className="font-semibold text-[#2C221E]">{dest.popularSeason.split(' ')[0]}</span>
+              <div className="px-5 sm:px-6 pb-6 pt-0 flex items-center justify-between">
+                <span className="text-[11px] font-semibold text-[#8F8175] flex items-center gap-1.5 bg-[#FAF7F2] px-3 py-1.5 rounded-full border border-[#EAE2D5]">
+                  <Calendar className="w-3.5 h-3.5 text-[#964223]" />
+                  Best: {dest.popularSeason.split(' ')[0]}
                 </span>
                 <Link
                   to={`/trips/new?destId=${dest.id}`}
-                  className="px-3.5 py-1.5 rounded-xl bg-[#964223] text-white text-xs font-bold hover:bg-[#7D351B] transition-colors"
+                  className="px-4 py-2.5 rounded-xl bg-[#964223] text-white text-xs font-bold hover:bg-[#7D351B] transition-all group-hover:-translate-y-0.5 inline-flex items-center gap-1.5 shadow-sm"
                 >
-                  Plan Circuit
+                  <span>Plan Route</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
               </div>
             </div>

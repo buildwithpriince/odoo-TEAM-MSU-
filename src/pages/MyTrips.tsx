@@ -15,10 +15,12 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { useTrip } from '../context/TripContext';
+import { useCurrency } from '../context/CurrencyContext';
 import { Trip } from '../types';
 
 export const MyTrips: React.FC = () => {
   const { trips, deleteTrip, duplicateTrip } = useTrip();
+  const { formatPrice } = useCurrency();
   const navigate = useNavigate();
 
   const [statusFilter, setStatusFilter] = useState<'all' | 'upcoming' | 'planning' | 'completed'>('all');
@@ -219,7 +221,7 @@ export const MyTrips: React.FC = () => {
                     <div className="pt-2 border-t border-[#EAE2D5] flex items-center justify-between text-xs">
                       <span className="text-[#8F8175]">Budget:</span>
                       <span className="font-bold text-[#2C221E]">
-                        ${cost.toLocaleString()} / ${trip.totalBudget?.toLocaleString()}
+                        {formatPrice(cost)} / {formatPrice(trip.totalBudget || 0)}
                       </span>
                     </div>
                   </div>
