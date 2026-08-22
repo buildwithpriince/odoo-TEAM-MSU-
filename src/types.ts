@@ -1,5 +1,6 @@
 export interface User {
   id: string;
+  
   name: string;
   email: string;
   avatarUrl?: string;
@@ -13,6 +14,7 @@ export type ActivityCategory = 'sightseeing' | 'dining' | 'transport' | 'lodging
 
 export interface ActivityItem {
   id: string;
+  
   title: string;
   time?: string;
   duration?: string;
@@ -32,6 +34,7 @@ export interface DayItinerary {
 
 export interface CityStop {
   id: string;
+  
   cityName: string;
   country: string;
   arrivalDate: string;
@@ -45,21 +48,28 @@ export type BudgetCategory = 'Flights' | 'Lodging' | 'Food & Drinks' | 'Activiti
 
 export interface BudgetItem {
   id: string;
+  
   category: BudgetCategory;
   estimatedCost: number;
   actualCost: number;
   paid: boolean;
   notes?: string;
+  currency?: string;
+  isCustom?: boolean;
 }
 
 export interface Trip {
+  createdAt?: string;
   id: string;
+  
   title: string;
   description: string;
   coverImage: string;
   startDate: string;
   endDate: string;
   status: 'planning' | 'upcoming' | 'completed';
+  boardingFrom?: string;
+  aiTransportEstimates?: { from: string; to: string; mode: string; estimated_cost_usd: number; notes: string; }[];
   stops: CityStop[];
   totalBudget: number;
   currency: string;
@@ -74,6 +84,7 @@ export interface Trip {
 
 export interface CuratedActivity {
   id: string;
+  
   title: string;
   category: ActivityCategory;
   duration: string;
@@ -85,6 +96,7 @@ export interface CuratedActivity {
 
 export interface Destination {
   id: string;
+  
   name: string;
   country: string;
   region: string;
@@ -98,6 +110,7 @@ export interface Destination {
   popularSeason: string;
   highlights: string[];
   vibe: string;
+  tags: string[];
   description: string;
   curatedActivities: CuratedActivity[];
   curatedStops?: string[]; // nearby stops for a multi-city circuit

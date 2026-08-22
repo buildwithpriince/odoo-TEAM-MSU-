@@ -41,7 +41,7 @@ export const CitySearch: React.FC = () => {
       dest.region.toLowerCase().includes(searchQuery.toLowerCase()) ||
       dest.highlights.some(h => h.toLowerCase().includes(searchQuery.toLowerCase()));
 
-    const matchesVibe = selectedVibe === 'All' || dest.vibe.includes(selectedVibe) || selectedVibe.includes(dest.vibe);
+    const matchesVibe = selectedVibe === 'All' || (dest.tags && dest.tags.includes(selectedVibe));
     
     const matchesBudget = selectedBudgetTier === 'All' || 
       (selectedBudgetTier === '$' && dest.costIndex === 1) ||
@@ -96,6 +96,7 @@ export const CitySearch: React.FC = () => {
               <option value="Mountains">Mountain & Alpine</option>
               <option value="Coastal">Coastal & Beaches</option>
               <option value="Culture">Culture & Shrines</option>
+              <option value="Adventure">Nature & Adventure</option>
             </select>
           </div>
 
@@ -166,7 +167,7 @@ export const CitySearch: React.FC = () => {
                   {dest.highlights.slice(0, 3).map((hl, i) => (
                     <span 
                       key={i}
-                      className="text-[10px] font-bold uppercase tracking-wider text-[#8F8175] bg-[#FAF7F2] border border-[#EAE2D5] px-2.5 py-1 rounded-lg"
+                      className="text-[10px] font-bold uppercase tracking-wider text-[#6B5E55] bg-white/40 backdrop-blur-sm border border-white/50 px-2.5 py-1 rounded-lg shadow-[inset_0_1px_0_rgba(255,255,255,0.4)]"
                     >
                       {hl}
                     </span>
@@ -179,14 +180,14 @@ export const CitySearch: React.FC = () => {
             <div className="px-5 sm:px-6 pb-6 pt-0 flex items-center justify-between">
               <span className="text-[11px] font-semibold text-[#8F8175] flex items-center gap-1.5 bg-[#FAF7F2] px-3 py-1.5 rounded-full border border-[#EAE2D5]">
                 <Calendar className="w-3.5 h-3.5 text-[#964223]" />
-                Best: {dest.popularSeason.split(' ')[0]}
+                Ideal season: {dest.popularSeason}
               </span>
 
               <Link
                 to={`/trips/new?destId=${dest.id}`}
                 onClick={(e) => e.stopPropagation()}
                 id={`plan-trip-from-explore-${dest.id}`}
-                className="px-4 py-2.5 rounded-xl bg-[#964223] text-white text-xs font-bold hover:bg-[#7D351B] transition-all group-hover:-translate-y-0.5 inline-flex items-center gap-1.5 shadow-sm"
+                className="px-4 py-2.5 rounded-xl btn-glass-primary text-xs font-bold transition-all group-hover:-translate-y-0.5 inline-flex items-center gap-1.5 shadow-sm"
               >
                 <span>Plan Trip</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -272,7 +273,7 @@ export const CitySearch: React.FC = () => {
 
               <Link
                 to={`/trips/new?destId=${selectedDestModal.id}`}
-                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#964223] text-white text-xs font-bold hover:bg-[#7D351B] shadow-xs"
+                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl btn-glass-primary text-xs font-bold shadow-xs"
               >
                 <span>Plan Journey with this Theme</span>
                 <ArrowRight className="w-4 h-4" />

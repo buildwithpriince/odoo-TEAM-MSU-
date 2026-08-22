@@ -6,6 +6,9 @@ interface CurrencyContextType {
   currency: Currency;
   setCurrency: (currency: Currency) => void;
   formatPrice: (amountInUSD: number) => string;
+  convertCostToCurrentCurrency: (cost: number, itemCurrency?: string) => number;
+  formatCurrentCurrency: (cost: number) => string;
+  formatAsEnteredCost: (cost: number, itemCurrency?: string) => string;
 }
 
 const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined);
@@ -27,6 +30,22 @@ export const CurrencyProvider: React.FC<{ children: ReactNode }> = ({ children }
     localStorage.setItem('app_currency', newCurrency);
   };
 
+  const convertCostToCurrentCurrency = (cost: number, itemCurrency?: string) => {
+    if (!itemCurrency) {
+      return currency === 'INR' ? cost * USD_TO_INR_RATE : cost;
+    }
+    if (itemCurrency === currency) return cost;
+    if (itemCurrency === 'INR' && currency === 'USD') return cost / USD_TO_INR_RATE;
+    if (itemCurrency === 'USD' && currency === 'INR') return cost * USD_TO_INR_RATE;
+    return cost;
+  };
+
+  const formatCurrentCurrency = (cost: number): string => {
+    return currency === 'INR' 
+      ? `₹${Math.round(cost).toLocaleString('en-IN')}` 
+      : `$${Math.round(cost).toLocaleString('en-US')}`;
+  };
+
   const formatPrice = (amountInUSD: number): string => {
     if (currency === 'INR') {
       const amountInINR = Math.round(amountInUSD * USD_TO_INR_RATE);
@@ -35,8 +54,22 @@ export const CurrencyProvider: React.FC<{ children: ReactNode }> = ({ children }
     return `$${Math.round(amountInUSD).toLocaleString('en-US')}`;
   };
 
+  const formatAsEnteredCost = (cost: number, itemCurrency?: string): string => {
+    if (!itemCurrency) return formatPrice(cost);
+    if (itemCurrency === currency) {
+      return currency === 'INR' ? `₹${cost.toLocaleString('en-IN')}` : `$${cost.toLocaleString('en-US')}`;
+    }
+    if (itemCurrency === 'INR' && currency === 'USD') {
+      return `$${Math.round(cost / USD_TO_INR_RATE).toLocaleString('en-US')}`;
+    }
+    if (itemCurrency === 'USD' && currency === 'INR') {
+      return `₹${Math.round(cost * USD_TO_INR_RATE).toLocaleString('en-IN')}`;
+    }
+    return formatPrice(cost);
+  };
+
   return (
-    <CurrencyContext.Provider value={{ currency, setCurrency, formatPrice }}>
+    <CurrencyContext.Provider value={{ currency, setCurrency, formatPrice, convertCostToCurrentCurrency, formatCurrentCurrency, formatAsEnteredCost }}>
       {children}
     </CurrencyContext.Provider>
   );

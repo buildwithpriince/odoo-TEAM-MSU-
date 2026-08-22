@@ -89,7 +89,7 @@ export const Profile: React.FC = () => {
               </span>
               <span className="flex items-center gap-1">
                 <DollarSign className="w-3.5 h-3.5 text-[#964223]" />
-                <span>Currency: {user?.currency}</span>
+                <span>Currency: {currency}</span>
               </span>
             </div>
           </div>

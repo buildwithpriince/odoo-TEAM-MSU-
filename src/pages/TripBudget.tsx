@@ -24,7 +24,7 @@ import { useCurrency } from '../context/CurrencyContext';
 import { BudgetItem, BudgetCategory } from '../types';
 
 export const TripBudget: React.FC = () => {
-  const { formatPrice, currency } = useCurrency();
+  const { formatPrice, currency, convertCostToCurrentCurrency, formatCurrentCurrency, formatAsEnteredCost } = useCurrency();
   const [searchParams, setSearchParams] = useSearchParams();
   const tripIdParam = searchParams.get('tripId');
   const { trips, activeTrip, addBudgetItem, updateBudgetItem, removeBudgetItem, toggleBudgetItemPaid } = useTrip();
@@ -60,9 +60,9 @@ export const TripBudget: React.FC = () => {
     }, 0);
   }, 0);
 
-  const totalEstimated = budgetItems.reduce((sum, item) => sum + (item.estimatedCost || 0), 0);
-  const totalActual = budgetItems.reduce((sum, item) => sum + (item.actualCost || 0), 0);
-  const totalTarget = selectedTrip.totalBudget || 3000;
+  const totalEstimated = budgetItems.reduce((sum, item) => sum + convertCostToCurrentCurrency(item.estimatedCost, item.currency), 0);
+  const totalActual = budgetItems.reduce((sum, item) => sum + convertCostToCurrentCurrency(item.actualCost, item.currency), 0);
+  const totalTarget = convertCostToCurrentCurrency(selectedTrip.totalBudget || 3000, selectedTrip.currency);
   
   const effectiveTotal = totalActual > 0 ? totalActual : totalEstimated;
   const remaining = totalTarget - effectiveTotal;
@@ -76,13 +76,15 @@ export const TripBudget: React.FC = () => {
       estimatedCost: Number(estimatedCost) || 0,
       actualCost: Number(actualCost) || 0,
       paid: isPaid,
-      notes: notes.trim()
+      notes: notes.trim(),
+      currency, // Store exactly as entered with the current currency
+      isCustom: true
     };
 
     addBudgetItem(selectedTrip.id, newItem);
     setNotes('');
-    setEstimatedCost('120');
-    setActualCost('0');
+    setEstimatedCost('');
+    setActualCost('');
     setIsPaid(false);
   };
 
@@ -101,8 +103,8 @@ export const TripBudget: React.FC = () => {
   const categoriesList: BudgetCategory[] = ['Flights', 'Lodging', 'Food & Drinks', 'Activities', 'Transit', 'Misc'];
   const categoryStats = categoriesList.map(cat => {
     const items = budgetItems.filter(b => b.category === cat);
-    const est = items.reduce((s, i) => s + (i.estimatedCost || 0), 0);
-    const act = items.reduce((s, i) => s + (i.actualCost || 0), 0);
+    const est = items.reduce((s, i) => s + convertCostToCurrentCurrency(i.estimatedCost || 0, i.currency), 0);
+    const act = items.reduce((s, i) => s + convertCostToCurrentCurrency(i.actualCost || 0, i.currency), 0);
     const effective = act > 0 ? act : est;
     const percent = totalEstimated > 0 ? Math.round((est / totalEstimated) * 100) : 0;
     const meta = getCategoryMeta(cat);
@@ -156,7 +158,7 @@ export const TripBudget: React.FC = () => {
           <div className="editorial-card p-5">
             <span className="text-[11px] font-bold uppercase tracking-wider text-[#8F8175]">Target Budget</span>
             <p className="font-serif-heading text-2xl sm:text-3xl font-bold text-[#2C221E] mt-1">
-              {formatPrice(totalTarget)}
+              {formatCurrentCurrency(totalTarget)}
             </p>
             <p className="text-[11px] text-[#8F8175] mt-0.5">Assigned at trip scaffold</p>
           </div>
@@ -164,7 +166,7 @@ export const TripBudget: React.FC = () => {
           <div className="editorial-card p-5">
             <span className="text-[11px] font-bold uppercase tracking-wider text-[#8F8175]">Estimated Expenses</span>
             <p className="font-serif-heading text-2xl sm:text-3xl font-bold text-[#964223] mt-1">
-              {formatPrice(totalEstimated)}
+              {formatCurrentCurrency(totalEstimated)}
             </p>
             <p className="text-[11px] text-[#8F8175] mt-0.5">{budgetItems.length} line items tracked</p>
           </div>
@@ -176,7 +178,7 @@ export const TripBudget: React.FC = () => {
             <p className={`font-serif-heading text-2xl sm:text-3xl font-bold mt-1 ${
               isOverBudget ? 'text-rose-700' : 'text-emerald-700'
             }`}>
-              {isOverBudget ? `-${formatPrice(Math.abs(remaining))}` : formatPrice(remaining)}
+              {isOverBudget ? `-${formatCurrentCurrency(Math.abs(remaining))}` : formatCurrentCurrency(remaining)}
             </p>
             <p className="text-[11px] text-[#8F8175] mt-0.5">
               {isOverBudget ? 'Exceeds target limit' : 'Under allocated budget'}
@@ -238,7 +240,7 @@ export const TripBudget: React.FC = () => {
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center">
                 <span className="text-[10px] uppercase font-bold text-[#8F8175]">Total Estimated</span>
                 <span className="font-serif-heading font-bold text-xl text-[#2C221E]">
-                  {formatPrice(totalEstimated)}
+                  {formatCurrentCurrency(totalEstimated)}
                 </span>
                 {hoveredCategory && (
                   <span className="text-[10px] font-semibold text-[#964223] truncate max-w-[90px]">
@@ -272,7 +274,7 @@ export const TripBudget: React.FC = () => {
                         <span className="font-semibold text-[#2C221E]">{stat.category}</span>
                       </div>
                       <span className="font-bold text-[#2C221E]">
-                        {formatPrice(stat.estimated)} ({stat.percent}%)
+                        {formatCurrentCurrency(stat.estimated)} ({stat.percent}%)
                       </span>
                     </div>
                     <div className="w-full h-1.5 bg-[#EAE2D5] rounded-full overflow-hidden">
@@ -415,9 +417,14 @@ export const TripBudget: React.FC = () => {
                           {item.notes && (
                             <span className="text-[11px] text-[#8F8175] truncate max-w-[200px]">· {item.notes}</span>
                           )}
+                          {item.isCustom && item.currency && (
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold tracking-widest text-[#6B5E55] bg-white/40 backdrop-blur-sm border border-white/50 shadow-[inset_0_1px_0_rgba(255,255,255,0.4)]">
+                              ENTERED IN {item.currency === 'INR' ? '₹' : '$'}
+                            </span>
+                          )}
                         </div>
                         <p className="text-[11px] text-[#6B5E55] mt-0.5">
-                          Est: {formatPrice(item.estimatedCost)} {item.actualCost > 0 ? `· Actual: ${formatPrice(item.actualCost)}` : ''}
+                          Est: {formatAsEnteredCost(item.estimatedCost, item.currency)} {item.actualCost > 0 ? `· Actual: ${formatAsEnteredCost(item.actualCost, item.currency)}` : ''}
                         </p>
                       </div>
                     </div>

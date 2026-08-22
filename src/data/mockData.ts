@@ -16,6 +16,7 @@ export const POPULAR_DESTINATIONS: Destination[] = [
     popularSeason: 'October – March',
     highlights: ['Amber Fort & Sheesh Mahal', 'Hawa Mahal Palace', 'City Palace Museum', 'Johari Bazaar Gems'],
     vibe: 'Royal Heritage & Art',
+    tags: ['Heritage'],
     description: 'Immerse yourself in Rajasthan’s opulent capital, where terracotta-hued sandstone facades line storied streets and hilltop fortresses overlook desert landscapes.',
     curatedStops: ['Jaipur', 'Jodhpur', 'Udaipur'],
     curatedActivities: [
@@ -40,6 +41,7 @@ export const POPULAR_DESTINATIONS: Destination[] = [
     popularSeason: 'April – June & Dec – Feb',
     highlights: ['Kalka-Shimla Toy Train', 'The Ridge & Christ Church', 'Jakhoo Hill & Temple', 'Mall Road Evening Walk'],
     vibe: 'Pine Whispers & Colonial Heritage',
+    tags: ['Mountains'],
     description: 'Perched high in the Western Himalayas, Shimla offers crisp mountain breezes, British-era neo-Gothic landmarks, and endless ridge trails bordered by towering deodars.',
     curatedStops: ['Shimla', 'Kullu', 'Manali'],
     curatedActivities: [
@@ -64,6 +66,7 @@ export const POPULAR_DESTINATIONS: Destination[] = [
     popularSeason: 'November – March',
     highlights: ['Palolem & Anjuna Beaches', 'Fontainhas Latin Quarter', 'Dudhsagar Waterfalls', 'Spice Plantation Feast'],
     vibe: 'Coastal Bliss & Bohemian Spirit',
+    tags: ['Coastal'],
     description: 'Where Arabian Sea waves lap against golden sands, century-old Portuguese manors glow in pastel ochre, and fresh seafood curries simmer under swaying coconut palms.',
     curatedStops: ['North Goa', 'South Goa', 'Gokarna'],
     curatedActivities: [
@@ -88,6 +91,7 @@ export const POPULAR_DESTINATIONS: Destination[] = [
     popularSeason: 'Oct – June (Snow in Dec–Feb)',
     highlights: ['Solang Valley Gliders', 'Rohtang Pass & Atal Tunnel', 'Old Manali Apple Orchards', 'Hadimba Wooden Temple'],
     vibe: 'Alpine Adventure & Serenity',
+    tags: ['Mountains', 'Adventure'],
     description: 'Gateway to the high Himalayas, Manali charms travelers with cedar-scented trails, wooden pagoda shrines, and crystalline glacial streams.',
     curatedStops: ['Manali', 'Kasol', 'Spiti Valley'],
     curatedActivities: [
@@ -111,6 +115,7 @@ export const POPULAR_DESTINATIONS: Destination[] = [
     popularSeason: 'March – May & Oct – Nov',
     highlights: ['Fushimi Inari Torii Path', 'Arashiyama Bamboo Grove', 'Gion Geisha District', 'Kinkaku-ji Golden Pavilion'],
     vibe: 'Culture & Tranquility',
+    tags: ['Culture', 'Heritage'],
     description: 'Japan’s historic heart, where cobblestone streets, crimson torii gates, and matcha tea ceremonies preserve ancient traditions seamlessly.',
     curatedStops: ['Tokyo', 'Kyoto', 'Osaka', 'Nara'],
     curatedActivities: [
@@ -135,6 +140,7 @@ export const POPULAR_DESTINATIONS: Destination[] = [
     popularSeason: 'May – September',
     highlights: ['Positano Cliff Walk', 'Ravello Villa Rufolo', 'Capri Private Boat Charter', 'Path of the Gods Trek'],
     vibe: 'Coastal Romance & Luxury',
+    tags: ['Coastal'],
     description: 'Dramatic limestone cliffs plunging into sparkling turquoise waters, dotted with terraced vineyards and iconic stacked pastel villas.',
     curatedStops: ['Naples', 'Sorrento', 'Positano', 'Amalfi', 'Capri'],
     curatedActivities: [
@@ -159,6 +165,7 @@ export const POPULAR_DESTINATIONS: Destination[] = [
     popularSeason: 'June – September & Dec – April',
     highlights: ['Gornergrat Cogwheel Train', 'Matterhorn Glacier Paradise', 'Five Lakes Alpine Hike', 'Swiss Cheese Fondue'],
     vibe: 'Majestic Alps & Pure Luxury',
+    tags: ['Mountains'],
     description: 'A storybook car-free mountain haven sitting directly in the shadow of the world’s most photographed peak.',
     curatedStops: ['Zurich', 'Lucerne', 'Interlaken', 'Zermatt'],
     curatedActivities: [
@@ -182,6 +189,7 @@ export const POPULAR_DESTINATIONS: Destination[] = [
     popularSeason: 'May – October',
     highlights: ['Sagrada Família', 'Park Güell Mosaics', 'Gothic Quarter Tapas', 'Barceloneta Beachfront'],
     vibe: 'Art, Food & Vibrant Sun',
+    tags: ['Culture', 'Coastal'],
     description: 'Dynamic Catalan metropolis blending avant-garde modernist architecture, sun-drenched urban beaches, and buzzing tapas culture.',
     curatedStops: ['Barcelona', 'Valencia', 'Madrid', 'Seville'],
     curatedActivities: [
@@ -204,6 +212,7 @@ export const POPULAR_DESTINATIONS: Destination[] = [
     popularSeason: 'November – March',
     highlights: ['Table Mountain Cableway', 'Boulders Beach Penguins', 'Cape of Good Hope', 'Stellenbosch Wine Tour'],
     vibe: 'Adventure, Ocean & Vineyards',
+    tags: ['Adventure', 'Coastal'],
     description: 'Where dramatic ocean cliffs meet lush vineyards beneath the flat-topped silhouette of Table Mountain.',
     curatedStops: ['Cape Town', 'Stellenbosch', 'Hermanus', 'Garden Route'],
     curatedActivities: [

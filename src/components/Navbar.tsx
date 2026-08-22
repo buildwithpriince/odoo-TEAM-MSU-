@@ -90,7 +90,7 @@ export const Navbar: React.FC = () => {
           </Link>
 
           {/* Desktop Navigation Links */}
-          <nav className="hidden md:flex items-center gap-1 bg-[#F0EAE1]/70 p-1.5 rounded-2xl border border-[#E3D9CB]">
+          <nav className="hidden md:flex items-center gap-1 bg-white/40 backdrop-blur-md p-1.5 rounded-2xl border border-white/50 shadow-[inset_0_1px_0_rgba(255,255,255,0.4),0_2px_10px_-2px_rgba(0,0,0,0.05)]">
             {navLinks.map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.path || (item.path !== '/' && location.pathname.startsWith(item.path));
@@ -101,8 +101,8 @@ export const Navbar: React.FC = () => {
                   id={`nav-link-${item.name.toLowerCase().replace(' ', '-')}`}
                   className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold tracking-wide transition-all duration-150 ${
                     isActive
-                      ? 'bg-[#FCFAF6] text-[#2C221E] shadow-xs font-bold'
-                      : 'text-[#6B5E55] hover:text-[#2C221E] hover:bg-[#FCFAF6]/60'
+                      ? 'bg-white text-[#2C221E] shadow-[0_2px_4px_rgba(0,0,0,0.02)] font-bold border border-white'
+                      : 'text-[#6B5E55] hover:text-[#2C221E] hover:bg-white/50'
                   }`}
                 >
                   <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-[#964223]' : 'text-[#8F8175]'}`} />
@@ -131,7 +131,7 @@ export const Navbar: React.FC = () => {
             <Link
               to="/trips/new"
               id="header-plan-trip-btn"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#964223] text-[#FAF7F2] text-xs font-bold shadow-xs hover:bg-[#7D351B] active:scale-98 transition-all duration-150"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl btn-glass-primary text-xs font-bold"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Plan New Trip</span>

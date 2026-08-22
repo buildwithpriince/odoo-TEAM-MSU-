@@ -20,7 +20,7 @@ import { Trip } from '../types';
 
 export const MyTrips: React.FC = () => {
   const { trips, deleteTrip, duplicateTrip } = useTrip();
-  const { formatPrice } = useCurrency();
+  const { formatCurrentCurrency, convertCostToCurrentCurrency } = useCurrency();
   const navigate = useNavigate();
 
   const [statusFilter, setStatusFilter] = useState<'all' | 'upcoming' | 'planning' | 'completed'>('all');
@@ -45,11 +45,18 @@ export const MyTrips: React.FC = () => {
     }
   };
 
-  const handleDelete = (e: React.MouseEvent, id: string) => {
+  const [tripToDelete, setTripToDelete] = useState<string | null>(null);
+
+  const confirmDelete = (e: React.MouseEvent, id: string) => {
     e.preventDefault();
     e.stopPropagation();
-    if (window.confirm('Are you sure you want to remove this journey?')) {
-      deleteTrip(id);
+    setTripToDelete(id);
+  };
+
+  const handleConfirmDelete = () => {
+    if (tripToDelete) {
+      deleteTrip(tripToDelete);
+      setTripToDelete(null);
     }
   };
 
@@ -85,7 +92,7 @@ export const MyTrips: React.FC = () => {
         {/* Filter Tabs & Search */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
           {/* Status Tabs */}
-          <div className="flex items-center gap-1.5 bg-[#F0EAE1]/80 p-1.5 rounded-xl border border-[#E3D9CB] w-full sm:w-auto">
+          <div className="flex items-center gap-1.5 bg-white/40 backdrop-blur-md p-1.5 rounded-xl border border-white/50 shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] w-full sm:w-auto">
             {(['all', 'upcoming', 'planning', 'completed'] as const).map((status) => (
               <button
                 key={status}
@@ -93,8 +100,8 @@ export const MyTrips: React.FC = () => {
                 onClick={() => setStatusFilter(status)}
                 className={`flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg text-xs font-bold capitalize transition-all cursor-pointer ${
                   statusFilter === status
-                    ? 'bg-[#FCFAF6] text-[#2C221E] shadow-2xs'
-                    : 'text-[#6B5E55] hover:text-[#2C221E]'
+                    ? 'bg-white text-[#2C221E] shadow-[0_2px_4px_rgba(0,0,0,0.02)] border border-white'
+                    : 'text-[#6B5E55] hover:text-[#2C221E] hover:bg-white/50'
                 }`}
               >
                 {status}
@@ -141,8 +148,8 @@ export const MyTrips: React.FC = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredTrips.map((trip) => {
-            const actualSpent = (trip.budgetItems || []).reduce((s, b) => s + (b.actualCost || 0), 0);
-            const totalEst = (trip.budgetItems || []).reduce((s, b) => s + (b.estimatedCost || 0), 0);
+            const actualSpent = (trip.budgetItems || []).reduce((s, b) => s + convertCostToCurrentCurrency(b.actualCost || 0, b.currency), 0);
+            const totalEst = (trip.budgetItems || []).reduce((s, b) => s + convertCostToCurrentCurrency(b.estimatedCost || 0, b.currency), 0);
             const cost = actualSpent > 0 ? actualSpent : totalEst;
 
             return (
@@ -175,7 +182,7 @@ export const MyTrips: React.FC = () => {
                           <Copy className="w-3 h-3" />
                         </button>
                         <button
-                          onClick={(e) => handleDelete(e, trip.id)}
+                          onClick={(e) => confirmDelete(e, trip.id)}
                           title="Delete journey"
                           className="p-1.5 rounded-md bg-black/50 hover:bg-rose-950/80 text-white/90 hover:text-rose-300 transition-colors"
                         >
@@ -191,6 +198,11 @@ export const MyTrips: React.FC = () => {
                       <p className="text-[11px] text-white/80 mt-0.5">
                         {trip.startDate} &rarr; {trip.endDate}
                       </p>
+                      {trip.createdAt && (
+                        <p className="text-[10px] text-white/50 mt-0.5 font-medium">
+                          Created on {new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(trip.createdAt))}
+                        </p>
+                      )}
                     </div>
                   </div>
 
@@ -221,7 +233,7 @@ export const MyTrips: React.FC = () => {
                     <div className="pt-2 border-t border-[#EAE2D5] flex items-center justify-between text-xs">
                       <span className="text-[#8F8175]">Budget:</span>
                       <span className="font-bold text-[#2C221E]">
-                        {formatPrice(cost)} / {formatPrice(trip.totalBudget || 0)}
+                        {formatCurrentCurrency(cost)} / {formatCurrentCurrency(convertCostToCurrentCurrency(trip.totalBudget || 0, trip.currency))}
                       </span>
                     </div>
                   </div>
@@ -251,6 +263,32 @@ export const MyTrips: React.FC = () => {
         </div>
       )}
 
+      {tripToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-150">
+          <div className="editorial-card w-full max-w-sm p-6 space-y-6 shadow-2xl">
+            <h3 className="font-serif-heading text-xl font-bold text-[#2C221E]">
+              Delete this journey?
+            </h3>
+            <p className="text-sm text-[#6B5E55]">
+              This action cannot be undone. All your itinerary and budget data for this trip will be permanently removed.
+            </p>
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                onClick={() => setTripToDelete(null)}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-[#6B5E55] hover:bg-[#FAF7F2] transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-sm transition-colors cursor-pointer"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -71,3 +71,33 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #B8A794;
 }
+
+@layer utilities {
+  .btn-glass {
+    @apply bg-white/40 backdrop-blur-md border border-white/40 shadow-[inset_0_1px_0_rgba(255,255,255,0.4),0_2px_4px_rgba(0,0,0,0.02)] transition-all duration-300;
+  }
+  .btn-glass:hover {
+    @apply bg-white/60 -translate-y-[1px] shadow-[inset_0_1px_0_rgba(255,255,255,0.5),0_4px_8px_rgba(0,0,0,0.04)] border-white/50;
+  }
+  .btn-glass-primary {
+    @apply bg-[#964223]/85 backdrop-blur-md border border-white/20 shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_2px_6px_rgba(150,66,35,0.15)] transition-all duration-300 text-white;
+  }
+  .btn-glass-primary:hover {
+    @apply bg-[#964223]/95 -translate-y-[1px] shadow-[inset_0_1px_0_rgba(255,255,255,0.3),0_4px_10px_rgba(150,66,35,0.25)] border-white/30;
+  }
+  .btn-glass-dark {
+    @apply bg-black/40 backdrop-blur-md border border-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_2px_4px_rgba(0,0,0,0.1)] transition-all duration-300 text-white;
+  }
+  .btn-glass-dark:hover {
+    @apply bg-black/60 -translate-y-[1px] shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_4px_8px_rgba(0,0,0,0.15)] border-white/20;
+  }
+  
+  .bg-noise {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+    background-size: 150px;
+    opacity: 0.035;
+    pointer-events: none;
+    z-index: -1;
+  }
+}
