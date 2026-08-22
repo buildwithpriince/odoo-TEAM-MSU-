@@ -59,6 +59,7 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const createTrip = (tripData: Partial<Trip>): Trip => {
     const newTrip: Trip = {
       id: 'trip-' + Date.now(),
+      createdAt: new Date().toISOString(),
       title: tripData.title || 'New Multi-City Journey',
       description: tripData.description || 'Custom multi-destination itinerary',
       coverImage: tripData.coverImage || 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=1200&q=80',
@@ -69,12 +70,22 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
       totalBudget: tripData.totalBudget || 2500,
       currency: tripData.currency || 'USD',
       destinationTheme: tripData.destinationTheme,
+      boardingFrom: tripData.boardingFrom,
+      aiTransportEstimates: tripData.aiTransportEstimates,
       stops: tripData.stops || [],
       budgetItems: tripData.budgetItems || [
-        { id: 'b-' + Date.now() + '-1', category: 'Flights', estimatedCost: Math.round((tripData.totalBudget || 2500) * 0.35), actualCost: 0, paid: false, notes: 'Roundtrip & regional transport' },
-        { id: 'b-' + Date.now() + '-2', category: 'Lodging', estimatedCost: Math.round((tripData.totalBudget || 2500) * 0.40), actualCost: 0, paid: false, notes: 'Boutique hotels & havelis' },
-        { id: 'b-' + Date.now() + '-3', category: 'Food & Drinks', estimatedCost: Math.round((tripData.totalBudget || 2500) * 0.15), actualCost: 0, paid: false, notes: 'Daily culinary adventures' },
-        { id: 'b-' + Date.now() + '-4', category: 'Activities', estimatedCost: Math.round((tripData.totalBudget || 2500) * 0.10), actualCost: 0, paid: false, notes: 'Local tours & experiences' }
+        { 
+          id: 'b-' + Date.now() + '-1', 
+          category: 'Flights', 
+          estimatedCost: tripData.aiTransportEstimates?.reduce((acc: number, est: any) => acc + est.estimated_cost_usd, 0) || Math.round((tripData.totalBudget || 2500) * 0.35), 
+          actualCost: 0, 
+          paid: false, 
+          notes: tripData.aiTransportEstimates?.length ? '✨ AI Estimated Transport (Origin -> Destination)' : 'Roundtrip & regional transport',
+          currency: tripData.aiTransportEstimates?.length ? 'USD' : (tripData.currency || 'USD')
+        },
+        { id: 'b-' + Date.now() + '-2', category: 'Lodging', estimatedCost: Math.round((tripData.totalBudget || 2500) * 0.40), actualCost: 0, paid: false, notes: 'Boutique hotels & havelis', currency: tripData.currency || 'USD' },
+        { id: 'b-' + Date.now() + '-3', category: 'Food & Drinks', estimatedCost: Math.round((tripData.totalBudget || 2500) * 0.15), actualCost: 0, paid: false, notes: 'Daily culinary adventures', currency: tripData.currency || 'USD' },
+        { id: 'b-' + Date.now() + '-4', category: 'Activities', estimatedCost: Math.round((tripData.totalBudget || 2500) * 0.10), actualCost: 0, paid: false, notes: 'Local tours & experiences', currency: tripData.currency || 'USD' }
       ]
     };
 
@@ -97,6 +108,7 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const clonedTrip: Trip = {
       ...target,
       id: 'trip-' + Date.now(),
+      createdAt: new Date().toISOString(),
       title: `${target.title} (Copy)`,
       status: 'planning',
       stops: target.stops.map(s => ({

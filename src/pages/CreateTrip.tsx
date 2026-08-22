@@ -20,6 +20,8 @@ import { CityStop } from '../types';
 import { POPULAR_DESTINATIONS } from '../data/mockData';
 import { useCurrency } from '../context/CurrencyContext';
 
+import { RouteBackground } from "../components/RouteBackground";
+
 export const CreateTrip: React.FC = () => {
   const { currency } = useCurrency();
   const [searchParams] = useSearchParams();
@@ -67,6 +69,44 @@ export const CreateTrip: React.FC = () => {
   const [newCity, setNewCity] = useState('');
   const [newCountry, setNewCountry] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
+  const [boardingFrom, setBoardingFrom] = useState('');
+  const [isEstimatingTransport, setIsEstimatingTransport] = useState(false);
+  const [transportEstimates, setTransportEstimates] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchTransportCost = async () => {
+      if (boardingFrom.length > 2 && stops.length > 0) {
+        setIsEstimatingTransport(true);
+        try {
+          const res = await fetch('/api/estimate-transport', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              boardingFrom, 
+              stops: stops.map(s => s.cityName),
+              currency 
+            })
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data && data.estimates) {
+              setTransportEstimates(data.estimates);
+            }
+          }
+        } catch (e) {
+          console.error('Failed to estimate transport', e);
+        } finally {
+          setIsEstimatingTransport(false);
+        }
+      }
+    };
+    
+    const timeoutId = setTimeout(() => {
+      fetchTransportCost();
+    }, 1200);
+    
+    return () => clearTimeout(timeoutId);
+  }, [boardingFrom, stops, currency]);
 
   useEffect(() => {
     if (matchedDest) {
@@ -165,7 +205,10 @@ export const CreateTrip: React.FC = () => {
       startDate,
       endDate,
       travelVibe,
+      boardingFrom,
+      aiTransportEstimates: transportEstimates,
       totalBudget: Number(budget) || 2500,
+      currency,
       coverImage,
       destinationTheme: matchedDest ? {
         accentColor: matchedDest.dominantAccent,
@@ -179,7 +222,9 @@ export const CreateTrip: React.FC = () => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6 animate-in fade-in duration-200">
+    <>
+      <RouteBackground />
+      <div className="max-w-3xl mx-auto space-y-6 animate-in fade-in duration-200">
       
       {/* Back button */}
       <Link 
@@ -305,6 +350,54 @@ export const CreateTrip: React.FC = () => {
               </div>
             </div>
 
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-[#6B5E55] mb-1.5" htmlFor="boarding-from">
+                Boarding From (Departure City)
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#8F8175]">
+                  <MapPin className="w-4 h-4" />
+                </div>
+                <datalist id="boarding-cities-list">
+                  <option value="New York, USA" />
+                  <option value="London, UK" />
+                  <option value="Dubai, UAE" />
+                  <option value="Mumbai, India" />
+                  <option value="Delhi, India" />
+                  <option value="Sydney, Australia" />
+                  <option value="Singapore" />
+                </datalist>
+                <input
+                  id="boarding-from"
+                  type="text"
+                  list="boarding-cities-list"
+                  placeholder="e.g. New York, USA"
+                  value={boardingFrom}
+                  onChange={(e) => setBoardingFrom(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 bg-[#FAF7F2] border border-[#E0D7C8] rounded-xl text-sm text-[#2C221E] focus:outline-hidden focus:ring-2 focus:ring-[#964223]/30"
+                />
+              </div>
+              {isEstimatingTransport && (
+                <p className="text-[10px] text-amber-600 mt-1.5 flex items-center gap-1 animate-pulse">
+                  <Sparkles className="w-3 h-3" />
+                  Asking Gemini for live transport estimates...
+                </p>
+              )}
+              {!isEstimatingTransport && transportEstimates.length > 0 && (
+                <div className="mt-2 p-2.5 bg-amber-50/50 border border-amber-200/50 rounded-lg">
+                  <p className="text-[10px] font-bold text-amber-700 flex items-center gap-1 mb-1">
+                    <Sparkles className="w-3 h-3" />
+                    AI Estimated Transport
+                  </p>
+                  {transportEstimates.map((est, i) => (
+                    <p key={i} className="text-[10px] text-[#6B5E55] leading-tight">
+                      {est.from} &rarr; {est.to}: <span className="font-semibold">{currency === 'INR' ? '₹' : '$'}{currency === 'INR' ? est.estimated_cost_usd * 83 : est.estimated_cost_usd}</span> ({est.mode})
+                    </p>
+                  ))}
+                </div>
+              )}
+            </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-[#6B5E55] mb-1.5" htmlFor="trip-vibe">
@@ -413,12 +506,25 @@ export const CreateTrip: React.FC = () => {
                 </div>
                 
                 <div className="flex-1 flex flex-col sm:flex-row items-stretch sm:items-center p-2 rounded-2xl bg-[#FAF7F2] border border-dashed border-[#D9CBBA] focus-within:border-[#964223]/50 focus-within:bg-white focus-within:shadow-[0_2px_8px_rgb(0,0,0,0.04)] transition-all gap-2">
+                  <datalist id="popular-cities-list">
+                    {POPULAR_DESTINATIONS.map(d => (
+                      <option key={d.id} value={d.name}>{d.country}</option>
+                    ))}
+                  </datalist>
                   <div className="flex-1 flex flex-col sm:flex-row items-stretch sm:items-center divide-y sm:divide-y-0 sm:divide-x divide-[#EAE2D5]">
                     <input
                       type="text"
+                      list="popular-cities-list"
                       placeholder="Next city (e.g. Kyoto)"
                       value={newCity}
-                      onChange={(e) => setNewCity(e.target.value)}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setNewCity(val);
+                        const match = POPULAR_DESTINATIONS.find(d => d.name.toLowerCase() === val.toLowerCase());
+                        if (match && !newCountry) {
+                          setNewCountry(match.country);
+                        }
+                      }}
                       className="w-full px-3.5 py-2.5 bg-transparent border-none text-sm text-[#2C221E] focus:outline-hidden placeholder:text-[#8F8175]"
                     />
                     <input
@@ -465,5 +571,6 @@ export const CreateTrip: React.FC = () => {
       </div>
 
     </div>
+    </>
   );
 };

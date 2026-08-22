@@ -6,6 +6,7 @@ import { Compass, Sparkles, MapPin, Luggage, ArrowUpRight } from 'lucide-react';
 export const Layout: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col bg-[#F5F1E8] text-[#2C221E]">
+      <div className="bg-noise fixed inset-0 pointer-events-none z-[-1]" />
       <Navbar />
       
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">

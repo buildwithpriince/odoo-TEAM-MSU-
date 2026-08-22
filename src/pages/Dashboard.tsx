@@ -27,11 +27,11 @@ import { POPULAR_DESTINATIONS } from '../data/mockData';
 export const Dashboard: React.FC = () => {
   const { user } = useAuth();
   const { trips, deleteTrip, duplicateTrip } = useTrip();
-  const { formatPrice } = useCurrency();
+  const { formatPrice, convertCostToCurrentCurrency, formatCurrentCurrency } = useCurrency();
   const navigate = useNavigate();
 
   const totalStops = trips.reduce((sum, t) => sum + (t.stops?.length || 0), 0);
-  const totalBudgeted = trips.reduce((sum, t) => sum + (t.totalBudget || 0), 0);
+  const totalBudgeted = trips.reduce((sum, t) => sum + convertCostToCurrentCurrency(t.totalBudget || 0, t.currency), 0);
 
   const calculateDays = () => {
     let totalDays = 0;
@@ -112,7 +112,7 @@ export const Dashboard: React.FC = () => {
               <DollarSign className="w-4 h-4" />
             </div>
           </div>
-          <p className="font-serif-heading text-3xl font-bold text-[#2C221E]">{formatPrice(totalBudgeted)}</p>
+          <p className="font-serif-heading text-3xl font-bold text-[#2C221E]">{formatCurrentCurrency(totalBudgeted)}</p>
           <p className="text-xs text-[#8F8175] mt-0.5">Tracked & synchronized</p>
         </div>
       </section>
@@ -130,7 +130,7 @@ export const Dashboard: React.FC = () => {
             <Link 
               to="/trips/new"
               id="dashboard-create-journey-btn"
-              className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-[#964223] hover:bg-[#7D351B] text-[#FAF7F2] text-xs font-bold transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5"
+              className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl btn-glass-primary text-xs font-bold transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Create New Journey</span>
@@ -157,7 +157,7 @@ export const Dashboard: React.FC = () => {
             </p>
             <Link
               to="/trips/new"
-              className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-[#964223] text-white text-xs font-bold shadow-md hover:bg-[#7D351B] transition-all hover:-translate-y-0.5"
+              className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl btn-glass-primary text-xs font-bold"
             >
               <Plus className="w-4 h-4" />
               <span>Draft Your First Itinerary</span>
@@ -166,10 +166,11 @@ export const Dashboard: React.FC = () => {
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {trips.map((trip) => {
-              const actualSpent = (trip.budgetItems || []).reduce((s, b) => s + (b.actualCost || 0), 0);
-              const totalEst = (trip.budgetItems || []).reduce((s, b) => s + (b.estimatedCost || 0), 0);
+              const actualSpent = (trip.budgetItems || []).reduce((s, b) => s + convertCostToCurrentCurrency(b.actualCost || 0, b.currency), 0);
+              const totalEst = (trip.budgetItems || []).reduce((s, b) => s + convertCostToCurrentCurrency(b.estimatedCost || 0, b.currency), 0);
               const effectiveCost = actualSpent > 0 ? actualSpent : totalEst;
-              const budgetPercent = Math.min(100, Math.round((effectiveCost / (trip.totalBudget || 1)) * 100));
+              const targetCost = convertCostToCurrentCurrency(trip.totalBudget || 1, trip.currency);
+              const budgetPercent = Math.min(100, Math.round((effectiveCost / targetCost) * 100));
 
               return (
                 <div 
@@ -219,6 +220,11 @@ export const Dashboard: React.FC = () => {
                           <Calendar className="w-3.5 h-3.5 text-amber-300" />
                           <span>{trip.startDate} &rarr; {trip.endDate}</span>
                         </div>
+                        {trip.createdAt && (
+                          <p className="text-[10px] text-white/50 mt-1 font-medium">
+                            Created on {new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(trip.createdAt))}
+                          </p>
+                        )}
                       </div>
                     </div>
 
@@ -253,7 +259,7 @@ export const Dashboard: React.FC = () => {
                         <div className="flex items-center justify-between text-xs">
                           <span className="text-[#8F8175] font-medium">Budget Tracked:</span>
                           <span className="font-semibold text-[#2C221E]">
-                            {formatPrice(effectiveCost)} / <span className="text-[#8F8175]">{formatPrice(trip.totalBudget || 0)}</span>
+                            {formatCurrentCurrency(effectiveCost)} / <span className="text-[#8F8175]">{formatCurrentCurrency(convertCostToCurrentCurrency(trip.totalBudget || 0, trip.currency))}</span>
                           </span>
                         </div>
                         <div className="w-full h-2 bg-[#EBE4D5] rounded-full overflow-hidden">
@@ -282,7 +288,7 @@ export const Dashboard: React.FC = () => {
                     <Link
                       to={`/builder?tripId=${trip.id}`}
                       id={`trip-builder-btn-${trip.id}`}
-                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#964223] hover:bg-[#7D351B] text-white text-xs font-bold transition-all shadow-xs"
+                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl btn-glass-primary text-xs font-bold transition-all shadow-xs"
                     >
                       <span>Open Itinerary Builder</span>
                       <ArrowRight className="w-3.5 h-3.5" />
@@ -360,11 +366,11 @@ export const Dashboard: React.FC = () => {
               <div className="px-5 sm:px-6 pb-6 pt-0 flex items-center justify-between">
                 <span className="text-[11px] font-semibold text-[#8F8175] flex items-center gap-1.5 bg-[#FAF7F2] px-3 py-1.5 rounded-full border border-[#EAE2D5]">
                   <Calendar className="w-3.5 h-3.5 text-[#964223]" />
-                  Best: {dest.popularSeason.split(' ')[0]}
+                  Ideal season: {dest.popularSeason}
                 </span>
                 <Link
                   to={`/trips/new?destId=${dest.id}`}
-                  className="px-4 py-2.5 rounded-xl bg-[#964223] text-white text-xs font-bold hover:bg-[#7D351B] transition-all group-hover:-translate-y-0.5 inline-flex items-center gap-1.5 shadow-sm"
+                  className="px-4 py-2.5 rounded-xl btn-glass-primary text-xs font-bold group-hover:-translate-y-0.5 inline-flex items-center gap-1.5 shadow-sm"
                 >
                   <span>Plan Route</span>
                   <ArrowRight className="w-3.5 h-3.5" />

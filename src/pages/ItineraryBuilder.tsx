@@ -32,8 +32,10 @@ import { useCurrency } from '../context/CurrencyContext';
 import { ActivityItem, CityStop, ActivityCategory } from '../types';
 import { POPULAR_DESTINATIONS } from '../data/mockData';
 
+import { RouteBackground } from "../components/RouteBackground";
+
 export const ItineraryBuilder: React.FC = () => {
-  const { formatPrice, currency } = useCurrency();
+  const { formatPrice, currency, convertCostToCurrentCurrency, formatCurrentCurrency } = useCurrency();
   const [searchParams, setSearchParams] = useSearchParams();
   const tripIdParam = searchParams.get('tripId');
   const { trips, activeTrip, updateTrip, addActivityToStop, removeActivityFromStop, reorderStops, addStopToTrip, removeStopFromTrip } = useTrip();
@@ -56,6 +58,38 @@ export const ItineraryBuilder: React.FC = () => {
   const [newActivityDuration, setNewActivityDuration] = useState('2 hrs');
   const [newActivityCost, setNewActivityCost] = useState('25');
   const [newActivityNotes, setNewActivityNotes] = useState('');
+
+  // Trip Intelligence state
+  const [isIntelligenceOpen, setIsIntelligenceOpen] = useState(false);
+  const [isGeneratingIntelligence, setIsGeneratingIntelligence] = useState(false);
+  const [intelligenceSuggestions, setIntelligenceSuggestions] = useState<any[]>([]);
+
+  const handleGenerateIntelligence = async () => {
+    if (!selectedTrip || isGeneratingIntelligence) return;
+    setIsIntelligenceOpen(true);
+    setIsGeneratingIntelligence(true);
+    
+    try {
+      const context = `Destination: ${selectedTrip.stops.map(s => s.cityName).join(', ')}. Dates: ${selectedTrip.startDate} to ${selectedTrip.endDate}. Budget: ${selectedTrip.totalBudget} ${selectedTrip.currency}. Vibe: ${selectedTrip.travelVibe}.`;
+      
+      const res = await fetch('/api/trip-intelligence', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ context })
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.suggestions) {
+          setIntelligenceSuggestions(data.suggestions);
+        }
+      }
+    } catch (e) {
+      console.error('Failed to generate intelligence', e);
+    } finally {
+      setIsGeneratingIntelligence(false);
+    }
+  };
   const [targetDayNumber, setTargetDayNumber] = useState(1);
 
   // Quick add stop state for Step 1
@@ -185,7 +219,9 @@ export const ItineraryBuilder: React.FC = () => {
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-200">
+    <>
+      <RouteBackground />
+      <div className="space-y-8 animate-in fade-in duration-200">
       
       {/* Top Journey Header & Controls */}
       <div className="editorial-card p-6 sm:p-8 space-y-6">
@@ -203,6 +239,14 @@ export const ItineraryBuilder: React.FC = () => {
             </h1>
             
             <div className="flex flex-wrap items-center gap-3 text-xs text-[#6B5E55] mt-2">
+              {selectedTrip.createdAt && (
+                <>
+                  <span className="flex items-center gap-1 font-medium">
+                    Created on {new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(selectedTrip.createdAt))}
+                  </span>
+                  <span className="text-[#D9CBBA]">·</span>
+                </>
+              )}
               <span className="flex items-center gap-1">
                 <Calendar className="w-3.5 h-3.5 text-[#964223]" />
                 {selectedTrip.startDate} &rarr; {selectedTrip.endDate}
@@ -227,7 +271,7 @@ export const ItineraryBuilder: React.FC = () => {
               className="px-4 py-2.5 rounded-xl bg-[#F0EAE1] hover:bg-[#EAE2D5] text-[#2C221E] text-xs font-bold transition-colors flex items-center gap-1.5 border border-[#E3D9CB]"
             >
               <DollarSign className="w-3.5 h-3.5 text-[#964223]" />
-              <span>Live Budget (${selectedTrip.totalBudget?.toLocaleString()})</span>
+              <span>Live Budget ({formatCurrentCurrency(convertCostToCurrentCurrency(selectedTrip.totalBudget || 0, selectedTrip.currency))})</span>
             </Link>
 
             {trips.length > 1 && (
@@ -397,11 +441,24 @@ export const ItineraryBuilder: React.FC = () => {
               + Append Another Stop to Circuit
             </span>
             <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
+              <datalist id="builder-cities-list">
+                {POPULAR_DESTINATIONS.map(d => (
+                  <option key={d.id} value={d.name}>{d.country}</option>
+                ))}
+              </datalist>
               <input
                 type="text"
+                list="builder-cities-list"
                 placeholder="City Name (e.g. Udaipur)"
                 value={newStopCity}
-                onChange={(e) => setNewStopCity(e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setNewStopCity(val);
+                  const match = POPULAR_DESTINATIONS.find(d => d.name.toLowerCase() === val.toLowerCase());
+                  if (match && !newStopCountry) {
+                    setNewStopCountry(match.country);
+                  }
+                }}
                 className="sm:col-span-3 px-3.5 py-2.5 bg-white border border-[#D9CBBA] rounded-xl text-xs text-[#2C221E] focus:outline-hidden focus:ring-2 focus:ring-[#964223]/30"
               />
               <div className="sm:col-span-2 flex gap-2">
@@ -587,8 +644,61 @@ export const ItineraryBuilder: React.FC = () => {
 
               </div>
 
-              {/* Right Column: Curated Recommendations for Destination */}
+              {/* Right Column: Curated Recommendations & AI Intelligence */}
               <div className="space-y-4">
+                {/* Trip Intelligence Panel */}
+                <div className="editorial-card p-5 space-y-4 bg-gradient-to-br from-[#FAF7F2] to-[#F5F1E8]">
+                  <div className="flex items-center justify-between pb-3 border-b border-[#EAE2D5]">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-amber-600" />
+                      <h4 className="font-serif-heading font-bold text-sm text-[#2C221E]">
+                        Trip Intelligence
+                      </h4>
+                    </div>
+                    {!isIntelligenceOpen && (
+                      <button
+                        onClick={handleGenerateIntelligence}
+                        className="btn-glass text-[10px] font-bold px-2.5 py-1 text-amber-700 bg-amber-100/50 hover:bg-amber-100 cursor-pointer"
+                      >
+                        ✨ Ask AI
+                      </button>
+                    )}
+                  </div>
+                  
+                  {isIntelligenceOpen && (
+                    <div className="space-y-3">
+                      {isGeneratingIntelligence ? (
+                        <div className="flex flex-col items-center justify-center py-6 space-y-3">
+                          <Sparkles className="w-6 h-6 text-amber-500 animate-spin-slow" />
+                          <p className="text-xs font-medium text-[#6B5E55] animate-pulse">Generating insights...</p>
+                        </div>
+                      ) : (
+                        intelligenceSuggestions.map((suggestion, idx) => (
+                          <div key={idx} className="p-3 bg-white/60 border border-amber-100/60 rounded-xl shadow-[0_2px_10px_-2px_rgba(150,66,35,0.05)] backdrop-blur-sm transition-all hover:bg-white/80">
+                            <h5 className="font-bold text-xs text-[#2C221E] mb-1">{suggestion.title}</h5>
+                            <p className="text-[10px] text-[#6B5E55] leading-relaxed mb-2">{suggestion.body}</p>
+                            {suggestion.actionable && suggestion.actionActivity && (
+                              <button
+                                onClick={() => addActivityToStop(selectedTrip.id, currentStop.id, {
+                                  id: 'ai-act-' + Date.now(),
+                                  title: suggestion.actionActivity.title,
+                                  category: (suggestion.actionActivity.category as ActivityCategory) || 'sightseeing',
+                                  cost: suggestion.actionActivity.cost || 0,
+                                  duration: suggestion.actionActivity.duration || '2 hrs',
+                                  isCustom: true
+                                }, 1)}
+                                className="text-[10px] font-bold text-[#964223] hover:text-[#7D351B] flex items-center gap-1 cursor-pointer"
+                              >
+                                <Plus className="w-3 h-3" /> Add to Itinerary
+                              </button>
+                            )}
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}
+                </div>
+
                 <div className="editorial-card p-5 space-y-4">
                   <div className="flex items-center justify-between pb-3 border-b border-[#EAE2D5]">
                     <div className="flex items-center gap-2">
@@ -928,7 +1038,7 @@ export const ItineraryBuilder: React.FC = () => {
           </div>
         </div>
       )}
-
     </div>
+    </>
   );
 };
