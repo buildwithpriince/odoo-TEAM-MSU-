@@ -1,0 +1,6 @@
+{
+  "name": "GlobeTrotter",
+  "description": "Multi-city travel planning platform for seamless itineraries, city exploration, and trip budgeting.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,73 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg-base: #F5F1E8;
+    --card-base: #FCFAF6;
+    --card-border: #E8E0D2;
+    --accent-primary: #964223;
+    --accent-primary-hover: #7D351B;
+    --text-primary: #2C221E;
+    --text-secondary: #6B5E55;
+    --text-muted: #8F8175;
+  }
+
+  body {
+    background-color: var(--bg-base);
+    color: var(--text-primary);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, .font-serif-heading {
+    font-family: 'Fraunces', Georgia, serif;
+    font-optical-sizing: auto;
+    letter-spacing: -0.015em;
+  }
+
+  .font-sans-ui {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", sans-serif;
+  }
+}
+
+/* Editorial travel styling utilities */
+.editorial-card {
+  background-color: #FCFAF6;
+  border: 1px solid #EAE2D5;
+  box-shadow: 0 4px 20px -4px rgba(44, 34, 30, 0.05);
+  border-radius: 1.25rem;
+}
+
+.editorial-card-hover {
+  background-color: #FCFAF6;
+  border: 1px solid #EAE2D5;
+  box-shadow: 0 4px 20px -4px rgba(44, 34, 30, 0.05);
+  border-radius: 1.25rem;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.editorial-card-hover:hover {
+  border-color: #D9CBBA;
+  box-shadow: 0 12px 30px -6px rgba(44, 34, 30, 0.09);
+  transform: translateY(-2px);
+}
+
+/* Custom subtle scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #F0EAE1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #D4C7B8;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #B8A794;
+}
