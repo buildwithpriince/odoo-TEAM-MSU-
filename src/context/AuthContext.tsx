@@ -4,8 +4,7 @@ import { User } from '../types';
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
-  isAdmin: boolean;
-  login: (email: string, name?: string, role?: 'admin' | 'traveler') => void;
+  login: (email: string, name?: string) => void;
   signup: (email: string, name: string) => void;
   logout: () => void;
   updateProfile: (updatedData: Partial<User>) => void;
@@ -37,11 +36,49 @@ export const DEFAULT_ADMIN_USER: User = {
   role: 'admin'
 };
 
+const CURRENT_USER_KEY = 'globetrotter_user';
+const REGISTERED_USERS_KEY = 'globetrotter_registered_users';
+
+// --- Registered users registry (email -> User), backed by localStorage ---
+
+const loadRegisteredUsers = (): Record<string, User> => {
+  const saved = localStorage.getItem(REGISTERED_USERS_KEY);
+  if (saved) {
+    try {
+      return JSON.parse(saved);
+    } catch {
+      return {};
+    }
+  }
+  return {};
+};
+
+const saveRegisteredUsers = (users: Record<string, User>) => {
+  localStorage.setItem(REGISTERED_USERS_KEY, JSON.stringify(users));
+};
+
+const normalizeEmail = (email: string) => email.trim().toLowerCase();
+
+// Seed the demo account into the registry so "sign in" with the demo email
+// also resolves correctly through the same lookup path.
+const ensureDemoUserSeeded = () => {
+  const users = loadRegisteredUsers();
+  const key = normalizeEmail(DEFAULT_USER.email);
+  if (!users[key]) {
+    users[key] = DEFAULT_USER;
+    saveRegisteredUsers(users);
+  }
+};
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  useEffect(() => {
+    ensureDemoUserSeeded();
+  }, []);
+
   const [user, setUser] = useState<User | null>(() => {
-    const saved = localStorage.getItem('globetrotter_user');
+    const saved = localStorage.getItem(CURRENT_USER_KEY);
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -54,35 +91,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
         return DEFAULT_TRAVELER_USER;
       } catch {
-        return DEFAULT_TRAVELER_USER;
+        return DEFAULT_USER;
       }
     }
-    return DEFAULT_TRAVELER_USER; // Default logged in for smooth preview experience
+    return DEFAULT_USER; // Default logged in for smooth preview experience
   });
 
   useEffect(() => {
     if (user) {
-      localStorage.setItem('globetrotter_user', JSON.stringify(user));
+      localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
     } else {
-      localStorage.removeItem('globetrotter_user');
+      localStorage.removeItem(CURRENT_USER_KEY);
     }
   }, [user]);
 
-  const login = (email: string, name?: string, explicitRole?: 'admin' | 'traveler') => {
-    const isEmailAdmin = email.toLowerCase().includes('admin') || email.toLowerCase() === 'admin@globetrotter.io';
-    const role: 'admin' | 'traveler' = explicitRole || (isEmailAdmin ? 'admin' : 'traveler');
+  const login = (email: string, name?: string) => {
     const displayName = name || (email.split('@')[0].charAt(0).toUpperCase() + email.split('@')[0].slice(1));
-    
     setUser({
       id: 'usr-' + Date.now(),
       name: displayName,
       email,
-      avatarUrl: DEFAULT_TRAVELER_USER.avatarUrl,
-      homeCity: role === 'admin' ? 'Global HQ' : 'New York, NY',
+      avatarUrl: DEFAULT_USER.avatarUrl,
+      homeCity: 'New York, NY',
       currency: 'USD',
-      bio: role === 'admin' ? 'GlobeTrotter Platform Administrator' : 'Ready for my next adventure!',
-      savedDestinations: [],
-      role
+      bio: 'Ready for my next adventure!',
+      savedDestinations: []
     });
   };
 
@@ -95,7 +128,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signup = (email: string, name: string) => {
-    login(email, name, 'traveler');
+    login(email, name);
   };
 
   const logout = () => {
@@ -103,7 +136,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const updateProfile = (updatedData: Partial<User>) => {
-    setUser(prev => prev ? { ...prev, ...updatedData } : null);
+    setUser(prev => {
+      if (!prev) return null;
+      const updated = { ...prev, ...updatedData };
+
+      // Keep the registered-users registry in sync so future logins reflect
+      // the latest saved profile data too.
+      const users = loadRegisteredUsers();
+      const key = normalizeEmail(updated.email);
+      users[key] = updated;
+      saveRegisteredUsers(users);
+
+      return updated;
+    });
   };
 
   const isAdmin = user?.role === 'admin' || user?.email?.toLowerCase().includes('admin') === true;

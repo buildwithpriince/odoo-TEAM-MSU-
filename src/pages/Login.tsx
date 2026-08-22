@@ -6,8 +6,8 @@ import { useAuth } from '../context/AuthContext';
 export const Login: React.FC = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [name, setName] = useState('');
-  const [email, setEmail] = useState('alex.morgan@globetrotter.io');
-  const [password, setPassword] = useState('traveler2026');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -35,12 +35,15 @@ export const Login: React.FC = () => {
 
     setIsLoading(true);
     setTimeout(() => {
-      if (isSignUp) {
-        signup(email, name.trim());
-      } else {
-        login(email, name || 'Alex Morgan');
-      }
+      const result = isSignUp ? signup(email, name.trim()) : login(email);
+
       setIsLoading(false);
+
+      if (!result.success) {
+        setErrorMsg(result.error || 'Something went wrong. Please try again.');
+        return;
+      }
+
       navigate('/');
     }, 450);
   };
@@ -48,7 +51,7 @@ export const Login: React.FC = () => {
   const handleDemoLogin = () => {
     setIsLoading(true);
     setTimeout(() => {
-      login('alex.morgan@globetrotter.io', 'Alex Morgan');
+      login('alex.morgan@globetrotter.io');
       setIsLoading(false);
       navigate('/');
     }, 350);
