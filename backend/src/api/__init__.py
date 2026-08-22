@@ -1,14 +1,2 @@
 # -*- coding: utf-8 -*-
-from .schemas import (
-    TripCreateRequest,
-    TripUpdateRequest,
-    TripResponse,
-    ApiErrorResponse,
-)
-
-__all__ = [
-    "TripCreateRequest",
-    "TripUpdateRequest",
-    "TripResponse",
-    "ApiErrorResponse",
-]
+# Empty package initializer to prevent circular imports during schema/service initialization.
