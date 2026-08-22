@@ -14,7 +14,8 @@ import {
   DollarSign,
   ChevronDown,
   Calendar,
-  ShieldCheck
+  ShieldCheck,
+  Users
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTrip } from '../context/TripContext';
@@ -59,6 +60,7 @@ export const Navbar: React.FC = () => {
     { name: 'My Trips', path: '/trips', icon: Luggage },
     { name: 'Calendar', path: '/calendar', icon: Calendar },
     { name: 'Explore', path: '/explore', icon: Compass },
+    { name: 'Community', path: '/community', icon: Users },
     { name: 'Profile', path: '/profile', icon: User },
     ...(isAdmin ? [{ name: 'Admin Console', path: '/admin', icon: ShieldCheck }] : []),
   ];

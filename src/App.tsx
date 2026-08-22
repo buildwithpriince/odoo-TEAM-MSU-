@@ -15,6 +15,7 @@ import { TripBudget } from './pages/TripBudget';
 import { Profile } from './pages/Profile';
 import { CalendarView } from './pages/CalendarView';
 import { AdminPage } from './pages/AdminPage';
+import { CommunityPage } from './pages/CommunityPage';
 
 export default function App() {
   return (
@@ -47,6 +48,9 @@ export default function App() {
                 {/* City Search / Explore */}
                 <Route path="/explore" element={<CitySearch />} />
                 <Route path="/search" element={<CitySearch />} />
+
+                {/* Community Feed / Shared Journeys */}
+                <Route path="/community" element={<CommunityPage />} />
                 
                 {/* Trip Budget */}
                 <Route path="/budget" element={<TripBudget />} />

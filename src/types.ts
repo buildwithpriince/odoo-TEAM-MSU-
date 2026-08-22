@@ -81,6 +81,15 @@ export interface Trip {
     gradient: string;
     bgTint: string;
   };
+  isPublic?: boolean;
+  author?: {
+    id: string;
+    name: string;
+    avatarUrl?: string;
+    homeCity?: string;
+  };
+  likesCount?: number;
+  savesCount?: number;
 }
 
 export interface CuratedActivity {

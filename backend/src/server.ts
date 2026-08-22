@@ -10,6 +10,7 @@ import userRoutes from './routes/users.js';
 import tripRoutes from './routes/trips.js';
 import aiRoutes from './routes/ai.js';
 import adminRoutes from './routes/admin.js';
+import communityRoutes from './routes/community.js';
 
 const app = express();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -30,6 +31,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/trips', tripRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/community', communityRoutes);
 app.use('/api', aiRoutes);
 
 app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
