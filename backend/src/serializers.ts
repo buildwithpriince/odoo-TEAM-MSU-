@@ -11,6 +11,7 @@ export function userFromRow(row: Row) {
     currency: row.currency || 'USD',
     bio: row.bio || undefined,
     savedDestinations: JSON.parse(row.saved_destinations || '[]'),
+    role: row.role || (row.email?.toLowerCase().includes('admin') ? 'admin' : 'traveler'),
   };
 }
 

@@ -4,13 +4,16 @@ import { User } from '../types';
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
-  login: (email: string, name?: string) => void;
+  isAdmin: boolean;
+  login: (email: string, name?: string, role?: 'admin' | 'traveler') => void;
   signup: (email: string, name: string) => void;
   logout: () => void;
   updateProfile: (updatedData: Partial<User>) => void;
+  loginAsAdmin: () => void;
+  loginAsTraveler: () => void;
 }
 
-const DEFAULT_USER: User = {
+export const DEFAULT_TRAVELER_USER: User = {
   id: 'usr-101',
   name: 'Alex Morgan',
   email: 'alex.morgan@globetrotter.io',
@@ -18,7 +21,20 @@ const DEFAULT_USER: User = {
   homeCity: 'San Francisco, CA',
   currency: 'USD',
   bio: 'Passionate wanderer, coffee enthusiast, seeking authentic food stalls and hidden mountain trails.',
-  savedDestinations: ['Kyoto', 'Amalfi Coast', 'Cape Town']
+  savedDestinations: ['Kyoto', 'Amalfi Coast', 'Cape Town'],
+  role: 'traveler'
+};
+
+export const DEFAULT_ADMIN_USER: User = {
+  id: 'usr-admin-01',
+  name: 'Platform Administrator',
+  email: 'admin@globetrotter.io',
+  avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
+  homeCity: 'Global Operations',
+  currency: 'USD',
+  bio: 'GlobeTrotter platform administrator managing destinations, itineraries, and travel intelligence.',
+  savedDestinations: ['Jaipur', 'Tokyo', 'Paris'],
+  role: 'admin'
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -28,12 +44,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const saved = localStorage.getItem('globetrotter_user');
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.email) {
+          // Normalize role if not present
+          if (!parsed.role) {
+            parsed.role = parsed.email.toLowerCase().includes('admin') ? 'admin' : 'traveler';
+          }
+          return parsed;
+        }
+        return DEFAULT_TRAVELER_USER;
       } catch {
-        return DEFAULT_USER;
+        return DEFAULT_TRAVELER_USER;
       }
     }
-    return DEFAULT_USER; // Default logged in for smooth preview experience
+    return DEFAULT_TRAVELER_USER; // Default logged in for smooth preview experience
   });
 
   useEffect(() => {
@@ -44,22 +68,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [user]);
 
-  const login = (email: string, name?: string) => {
+  const login = (email: string, name?: string, explicitRole?: 'admin' | 'traveler') => {
+    const isEmailAdmin = email.toLowerCase().includes('admin') || email.toLowerCase() === 'admin@globetrotter.io';
+    const role: 'admin' | 'traveler' = explicitRole || (isEmailAdmin ? 'admin' : 'traveler');
     const displayName = name || (email.split('@')[0].charAt(0).toUpperCase() + email.split('@')[0].slice(1));
+    
     setUser({
       id: 'usr-' + Date.now(),
       name: displayName,
       email,
-      avatarUrl: DEFAULT_USER.avatarUrl,
-      homeCity: 'New York, NY',
+      avatarUrl: DEFAULT_TRAVELER_USER.avatarUrl,
+      homeCity: role === 'admin' ? 'Global HQ' : 'New York, NY',
       currency: 'USD',
-      bio: 'Ready for my next adventure!',
-      savedDestinations: []
+      bio: role === 'admin' ? 'GlobeTrotter Platform Administrator' : 'Ready for my next adventure!',
+      savedDestinations: [],
+      role
     });
   };
 
+  const loginAsAdmin = () => {
+    setUser(DEFAULT_ADMIN_USER);
+  };
+
+  const loginAsTraveler = () => {
+    setUser(DEFAULT_TRAVELER_USER);
+  };
+
   const signup = (email: string, name: string) => {
-    login(email, name);
+    login(email, name, 'traveler');
   };
 
   const logout = () => {
@@ -70,15 +106,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(prev => prev ? { ...prev, ...updatedData } : null);
   };
 
+  const isAdmin = user?.role === 'admin' || user?.email?.toLowerCase().includes('admin') === true;
+
   return (
     <AuthContext.Provider
       value={{
         user,
         isAuthenticated: !!user,
+        isAdmin,
         login,
         signup,
         logout,
-        updateProfile
+        updateProfile,
+        loginAsAdmin,
+        loginAsTraveler
       }}
     >
       {children}

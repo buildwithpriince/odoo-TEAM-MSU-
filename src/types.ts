@@ -8,6 +8,7 @@ export interface User {
   currency?: string;
   bio?: string;
   savedDestinations?: string[];
+  role?: 'admin' | 'traveler';
 }
 
 export type ActivityCategory = 'sightseeing' | 'dining' | 'transport' | 'lodging' | 'leisure';
