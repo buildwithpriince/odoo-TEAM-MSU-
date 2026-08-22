@@ -63,9 +63,9 @@ const normalizeEmail = (email: string) => email.trim().toLowerCase();
 // also resolves correctly through the same lookup path.
 const ensureDemoUserSeeded = () => {
   const users = loadRegisteredUsers();
-  const key = normalizeEmail(DEFAULT_USER.email);
+  const key = normalizeEmail(DEFAULT_TRAVELER_USER.email);
   if (!users[key]) {
-    users[key] = DEFAULT_USER;
+    users[key] = DEFAULT_TRAVELER_USER;
     saveRegisteredUsers(users);
   }
 };
@@ -91,10 +91,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
         return DEFAULT_TRAVELER_USER;
       } catch {
-        return DEFAULT_USER;
+        return DEFAULT_TRAVELER_USER;
       }
     }
-    return DEFAULT_USER; // Default logged in for smooth preview experience
+    return DEFAULT_TRAVELER_USER; // Default logged in for smooth preview experience
   });
 
   useEffect(() => {
@@ -111,7 +111,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       id: 'usr-' + Date.now(),
       name: displayName,
       email,
-      avatarUrl: DEFAULT_USER.avatarUrl,
+      avatarUrl: DEFAULT_TRAVELER_USER.avatarUrl,
       homeCity: 'New York, NY',
       currency: 'USD',
       bio: 'Ready for my next adventure!',
