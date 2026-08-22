@@ -28,10 +28,12 @@ import {
   Check
 } from 'lucide-react';
 import { useTrip } from '../context/TripContext';
+import { useCurrency } from '../context/CurrencyContext';
 import { ActivityItem, CityStop, ActivityCategory } from '../types';
 import { POPULAR_DESTINATIONS } from '../data/mockData';
 
 export const ItineraryBuilder: React.FC = () => {
+  const { formatPrice, currency } = useCurrency();
   const [searchParams, setSearchParams] = useSearchParams();
   const tripIdParam = searchParams.get('tripId');
   const { trips, activeTrip, updateTrip, addActivityToStop, removeActivityFromStop, reorderStops, addStopToTrip, removeStopFromTrip } = useTrip();
@@ -763,7 +765,7 @@ export const ItineraryBuilder: React.FC = () => {
                                   )}
                                 </div>
                                 <span className="font-bold text-[#2C221E]">
-                                  {act.cost ? `$${act.cost}` : 'Free'}
+                                  {act.cost ? formatPrice(act.cost) : 'Free'}
                                 </span>
                               </div>
                             );
@@ -882,7 +884,7 @@ export const ItineraryBuilder: React.FC = () => {
 
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-[#6B5E55] mb-1">
-                    Cost ($ USD)
+                    Cost ({currency === 'INR' ? '₹' : '$'})
                   </label>
                   <input
                     type="number"

@@ -20,9 +20,11 @@ import {
   Percent
 } from 'lucide-react';
 import { useTrip } from '../context/TripContext';
+import { useCurrency } from '../context/CurrencyContext';
 import { BudgetItem, BudgetCategory } from '../types';
 
 export const TripBudget: React.FC = () => {
+  const { formatPrice, currency } = useCurrency();
   const [searchParams, setSearchParams] = useSearchParams();
   const tripIdParam = searchParams.get('tripId');
   const { trips, activeTrip, addBudgetItem, updateBudgetItem, removeBudgetItem, toggleBudgetItemPaid } = useTrip();
@@ -154,7 +156,7 @@ export const TripBudget: React.FC = () => {
           <div className="editorial-card p-5">
             <span className="text-[11px] font-bold uppercase tracking-wider text-[#8F8175]">Target Budget</span>
             <p className="font-serif-heading text-2xl sm:text-3xl font-bold text-[#2C221E] mt-1">
-              ${totalTarget.toLocaleString()}
+              {formatPrice(totalTarget)}
             </p>
             <p className="text-[11px] text-[#8F8175] mt-0.5">Assigned at trip scaffold</p>
           </div>
@@ -162,7 +164,7 @@ export const TripBudget: React.FC = () => {
           <div className="editorial-card p-5">
             <span className="text-[11px] font-bold uppercase tracking-wider text-[#8F8175]">Estimated Expenses</span>
             <p className="font-serif-heading text-2xl sm:text-3xl font-bold text-[#964223] mt-1">
-              ${totalEstimated.toLocaleString()}
+              {formatPrice(totalEstimated)}
             </p>
             <p className="text-[11px] text-[#8F8175] mt-0.5">{budgetItems.length} line items tracked</p>
           </div>
@@ -174,7 +176,7 @@ export const TripBudget: React.FC = () => {
             <p className={`font-serif-heading text-2xl sm:text-3xl font-bold mt-1 ${
               isOverBudget ? 'text-rose-700' : 'text-emerald-700'
             }`}>
-              {isOverBudget ? `-$${Math.abs(remaining).toLocaleString()}` : `$${remaining.toLocaleString()}`}
+              {isOverBudget ? `-${formatPrice(Math.abs(remaining))}` : formatPrice(remaining)}
             </p>
             <p className="text-[11px] text-[#8F8175] mt-0.5">
               {isOverBudget ? 'Exceeds target limit' : 'Under allocated budget'}
@@ -236,7 +238,7 @@ export const TripBudget: React.FC = () => {
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center">
                 <span className="text-[10px] uppercase font-bold text-[#8F8175]">Total Estimated</span>
                 <span className="font-serif-heading font-bold text-xl text-[#2C221E]">
-                  ${totalEstimated.toLocaleString()}
+                  {formatPrice(totalEstimated)}
                 </span>
                 {hoveredCategory && (
                   <span className="text-[10px] font-semibold text-[#964223] truncate max-w-[90px]">
@@ -270,7 +272,7 @@ export const TripBudget: React.FC = () => {
                         <span className="font-semibold text-[#2C221E]">{stat.category}</span>
                       </div>
                       <span className="font-bold text-[#2C221E]">
-                        ${stat.estimated.toLocaleString()} ({stat.percent}%)
+                        {formatPrice(stat.estimated)} ({stat.percent}%)
                       </span>
                     </div>
                     <div className="w-full h-1.5 bg-[#EAE2D5] rounded-full overflow-hidden">
@@ -287,7 +289,7 @@ export const TripBudget: React.FC = () => {
 
           <div className="p-4 rounded-xl bg-[#FAF7F2] border border-[#E0D7C8] text-[11px] text-[#6B5E55] mt-4">
             <span className="font-bold text-[#2C221E] block mb-0.5">Budget Tip:</span>
-            Daily scheduled activities in the itinerary currently contribute <strong>${activitiesTotal}</strong> in direct entry fees and experiences.
+            Daily scheduled activities in the itinerary currently contribute <strong>{formatPrice(activitiesTotal)}</strong> in direct entry fees and experiences.
           </div>
         </div>
 
@@ -322,7 +324,7 @@ export const TripBudget: React.FC = () => {
 
                 <div>
                   <label className="block text-[10px] font-bold uppercase tracking-wider text-[#6B5E55] mb-1">
-                    Estimated Cost ($)
+                    Estimated Cost ({currency === 'INR' ? '₹' : '$'})
                   </label>
                   <input
                     type="number"
@@ -336,7 +338,7 @@ export const TripBudget: React.FC = () => {
 
                 <div>
                   <label className="block text-[10px] font-bold uppercase tracking-wider text-[#6B5E55] mb-1">
-                    Actual Booked ($)
+                    Actual Booked ({currency === 'INR' ? '₹' : '$'})
                   </label>
                   <input
                     type="number"
@@ -415,7 +417,7 @@ export const TripBudget: React.FC = () => {
                           )}
                         </div>
                         <p className="text-[11px] text-[#6B5E55] mt-0.5">
-                          Est: ${item.estimatedCost} {item.actualCost > 0 ? `· Actual: $${item.actualCost}` : ''}
+                          Est: {formatPrice(item.estimatedCost)} {item.actualCost > 0 ? `· Actual: ${formatPrice(item.actualCost)}` : ''}
                         </p>
                       </div>
                     </div>

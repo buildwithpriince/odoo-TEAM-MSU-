@@ -15,17 +15,19 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTrip } from '../context/TripContext';
+import { useCurrency, Currency } from '../context/CurrencyContext';
 import { POPULAR_DESTINATIONS } from '../data/mockData';
 
 export const Profile: React.FC = () => {
   const { user, updateProfile, logout } = useAuth();
   const { trips } = useTrip();
+  const { currency, setCurrency } = useCurrency();
   const navigate = useNavigate();
 
   const [name, setName] = useState(user?.name || 'Alex Morgan');
   const [homeCity, setHomeCity] = useState(user?.homeCity || 'San Francisco, CA');
-  const [currency, setCurrency] = useState(user?.currency || 'USD');
   const [bio, setBio] = useState(user?.bio || 'Passionate wanderer seeking authentic local food, mountain trails, and heritage architecture.');
+
   const [savedSuccess, setSavedSuccess] = useState(false);
 
   const handleSave = (e: React.FormEvent) => {
@@ -148,14 +150,11 @@ export const Profile: React.FC = () => {
               <select
                 id="prof-cur"
                 value={currency}
-                onChange={(e) => setCurrency(e.target.value)}
+                onChange={(e) => setCurrency(e.target.value as Currency)}
                 className="w-full px-3.5 py-2.5 bg-[#FAF7F2] border border-[#E0D7C8] rounded-xl text-xs text-[#2C221E]"
               >
                 <option value="USD">USD ($ - US Dollar)</option>
-                <option value="EUR">EUR (€ - Euro)</option>
-                <option value="GBP">GBP (£ - British Pound)</option>
                 <option value="INR">INR (₹ - Indian Rupee)</option>
-                <option value="JPY">JPY (¥ - Japanese Yen)</option>
               </select>
             </div>
 

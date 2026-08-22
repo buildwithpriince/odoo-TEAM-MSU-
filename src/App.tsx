@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { TripProvider } from './context/TripContext';
+import { CurrencyProvider } from './context/CurrencyContext';
 import { Layout } from './components/Layout';
 
 import { Dashboard } from './pages/Dashboard';
@@ -16,44 +17,46 @@ import { Profile } from './pages/Profile';
 export default function App() {
   return (
     <AuthProvider>
-      <TripProvider>
-        <BrowserRouter>
-          <Routes>
-            {/* Standalone Authentication Route */}
-            <Route path="/login" element={<Login />} />
+      <CurrencyProvider>
+        <TripProvider>
+          <BrowserRouter>
+            <Routes>
+              {/* Standalone Authentication Route */}
+              <Route path="/login" element={<Login />} />
 
-            {/* Application Shared Layout Routes */}
-            <Route element={<Layout />}>
-              <Route path="/" element={<Dashboard />} />
-              
-              {/* My Trips */}
-              <Route path="/trips" element={<MyTrips />} />
-              
-              {/* Create Trip */}
-              <Route path="/trips/new" element={<CreateTrip />} />
-              <Route path="/create-trip" element={<CreateTrip />} />
-              
-              {/* Itinerary Builder */}
-              <Route path="/builder" element={<ItineraryBuilder />} />
-              <Route path="/trips/:id/builder" element={<ItineraryBuilder />} />
-              
-              {/* City Search / Explore */}
-              <Route path="/explore" element={<CitySearch />} />
-              <Route path="/search" element={<CitySearch />} />
-              
-              {/* Trip Budget */}
-              <Route path="/budget" element={<TripBudget />} />
-              <Route path="/trips/:id/budget" element={<TripBudget />} />
-              
-              {/* Profile */}
-              <Route path="/profile" element={<Profile />} />
-            </Route>
+              {/* Application Shared Layout Routes */}
+              <Route element={<Layout />}>
+                <Route path="/" element={<Dashboard />} />
+                
+                {/* My Trips */}
+                <Route path="/trips" element={<MyTrips />} />
+                
+                {/* Create Trip */}
+                <Route path="/trips/new" element={<CreateTrip />} />
+                <Route path="/create-trip" element={<CreateTrip />} />
+                
+                {/* Itinerary Builder */}
+                <Route path="/builder" element={<ItineraryBuilder />} />
+                <Route path="/trips/:id/builder" element={<ItineraryBuilder />} />
+                
+                {/* City Search / Explore */}
+                <Route path="/explore" element={<CitySearch />} />
+                <Route path="/search" element={<CitySearch />} />
+                
+                {/* Trip Budget */}
+                <Route path="/budget" element={<TripBudget />} />
+                <Route path="/trips/:id/budget" element={<TripBudget />} />
+                
+                {/* Profile */}
+                <Route path="/profile" element={<Profile />} />
+              </Route>
 
-            {/* Fallback Redirect */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </BrowserRouter>
-      </TripProvider>
+              {/* Fallback Redirect */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </BrowserRouter>
+        </TripProvider>
+      </CurrencyProvider>
     </AuthProvider>
   );
 }
