@@ -12,7 +12,8 @@ import {
   Plane,
   Luggage,
   DollarSign,
-  ChevronDown
+  ChevronDown,
+  Calendar
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTrip } from '../context/TripContext';
@@ -55,6 +56,7 @@ export const Navbar: React.FC = () => {
   const navLinks = [
     { name: 'Dashboard', path: '/', icon: Sparkles },
     { name: 'My Trips', path: '/trips', icon: Luggage },
+    { name: 'Calendar', path: '/calendar', icon: Calendar },
     { name: 'Explore', path: '/explore', icon: Compass },
     { name: 'Profile', path: '/profile', icon: User },
   ];
