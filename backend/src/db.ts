@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS users (
   currency TEXT NOT NULL DEFAULT 'USD',
   bio TEXT,
   saved_destinations TEXT NOT NULL DEFAULT '[]',
+  role TEXT NOT NULL DEFAULT 'traveler',
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
@@ -54,6 +55,13 @@ CREATE INDEX IF NOT EXISTS idx_trips_user_created ON trips(user_id, created_at D
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 `);
 
+// Auto-migrate role column if table was created earlier without it
+try {
+  db.exec("ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'traveler'");
+} catch {
+  // Column already exists
+}
+
 const now = new Date().toISOString();
 const demoEmail = 'alex.morgan@globetrotter.io';
 const demo = db.prepare('SELECT id FROM users WHERE email = ?').get(demoEmail) as { id: string } | undefined;
@@ -62,8 +70,8 @@ if (!demo) {
   const userId = 'usr-demo';
   const passwordHash = bcrypt.hashSync('traveler2026', 12);
   db.prepare(`
-    INSERT INTO users (id,email,password_hash,name,avatar_url,home_city,currency,bio,saved_destinations,created_at,updated_at)
-    VALUES (@id,@email,@password_hash,@name,@avatar_url,@home_city,@currency,@bio,@saved_destinations,@created_at,@updated_at)
+    INSERT INTO users (id,email,password_hash,name,avatar_url,home_city,currency,bio,saved_destinations,role,created_at,updated_at)
+    VALUES (@id,@email,@password_hash,@name,@avatar_url,@home_city,@currency,@bio,@saved_destinations,@role,@created_at,@updated_at)
   `).run({
     id: userId,
     email: demoEmail,
@@ -74,6 +82,7 @@ if (!demo) {
     currency: 'USD',
     bio: 'Passionate wanderer, coffee enthusiast, seeking authentic food stalls and hidden mountain trails.',
     saved_destinations: JSON.stringify(['Kyoto', 'Amalfi Coast', 'Cape Town']),
+    role: 'traveler',
     created_at: now,
     updated_at: now,
   });
@@ -113,4 +122,29 @@ if (!demo) {
     }
   });
   tx();
+}
+
+// Seed admin user if missing
+const adminEmail = 'admin@globetrotter.io';
+const adminUser = db.prepare('SELECT id FROM users WHERE email = ?').get(adminEmail) as { id: string } | undefined;
+if (!adminUser) {
+  const adminId = 'usr-admin-01';
+  const adminHash = bcrypt.hashSync('admin2026', 12);
+  db.prepare(`
+    INSERT INTO users (id,email,password_hash,name,avatar_url,home_city,currency,bio,saved_destinations,role,created_at,updated_at)
+    VALUES (@id,@email,@password_hash,@name,@avatar_url,@home_city,@currency,@bio,@saved_destinations,@role,@created_at,@updated_at)
+  `).run({
+    id: adminId,
+    email: adminEmail,
+    password_hash: adminHash,
+    name: 'Platform Administrator',
+    avatar_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
+    home_city: 'Global Operations',
+    currency: 'USD',
+    bio: 'GlobeTrotter platform administrator managing destinations, itineraries, and travel intelligence.',
+    saved_destinations: JSON.stringify(['Jaipur', 'Tokyo', 'Paris']),
+    role: 'admin',
+    created_at: now,
+    updated_at: now,
+  });
 }

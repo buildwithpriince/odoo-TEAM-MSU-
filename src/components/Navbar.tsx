@@ -12,7 +12,10 @@ import {
   Plane,
   Luggage,
   DollarSign,
-  ChevronDown
+  ChevronDown,
+  Calendar,
+  ShieldCheck,
+  Users
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTrip } from '../context/TripContext';
@@ -47,7 +50,7 @@ const CurrencySwitcher = () => {
 
 export const Navbar: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { user, logout, isAuthenticated } = useAuth();
+  const { user, logout, isAuthenticated, isAdmin } = useAuth();
   const { activeTrip } = useTrip();
   const navigate = useNavigate();
   const location = useLocation();
@@ -55,8 +58,11 @@ export const Navbar: React.FC = () => {
   const navLinks = [
     { name: 'Dashboard', path: '/', icon: Sparkles },
     { name: 'My Trips', path: '/trips', icon: Luggage },
+    { name: 'Calendar', path: '/calendar', icon: Calendar },
     { name: 'Explore', path: '/explore', icon: Compass },
+    { name: 'Community', path: '/community', icon: Users },
     { name: 'Profile', path: '/profile', icon: User },
+    ...(isAdmin ? [{ name: 'Admin Console', path: '/admin', icon: ShieldCheck }] : []),
   ];
 
   const handleLogout = () => {
@@ -148,9 +154,16 @@ export const Navbar: React.FC = () => {
                   <div className="w-8 h-8 rounded-full bg-[#E0D4C3] border border-[#C8B8A2] text-[#2C221E] font-serif-heading font-bold text-xs flex items-center justify-center">
                     {user.name.charAt(0)}
                   </div>
-                  <span className="text-xs font-medium text-[#2C221E] hidden xl:inline">
-                    {user.name.split(' ')[0]}
-                  </span>
+                  <div className="hidden xl:flex flex-col text-left">
+                    <span className="text-xs font-medium text-[#2C221E] leading-none">
+                      {user.name.split(' ')[0]}
+                    </span>
+                    {isAdmin && (
+                      <span className="text-[9px] font-bold text-[#964223] uppercase tracking-wider mt-0.5">
+                        Admin
+                      </span>
+                    )}
+                  </div>
                 </Link>
                 <button
                   onClick={handleLogout}

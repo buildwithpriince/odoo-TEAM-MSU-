@@ -13,6 +13,9 @@ import { ItineraryBuilder } from './pages/ItineraryBuilder';
 import { CitySearch } from './pages/CitySearch';
 import { TripBudget } from './pages/TripBudget';
 import { Profile } from './pages/Profile';
+import { CalendarView } from './pages/CalendarView';
+import { AdminPage } from './pages/AdminPage';
+import { CommunityPage } from './pages/CommunityPage';
 
 export default function App() {
   return (
@@ -31,6 +34,9 @@ export default function App() {
                 {/* My Trips */}
                 <Route path="/trips" element={<MyTrips />} />
                 
+                {/* Calendar View */}
+                <Route path="/calendar" element={<CalendarView />} />
+                
                 {/* Create Trip */}
                 <Route path="/trips/new" element={<CreateTrip />} />
                 <Route path="/create-trip" element={<CreateTrip />} />
@@ -42,6 +48,9 @@ export default function App() {
                 {/* City Search / Explore */}
                 <Route path="/explore" element={<CitySearch />} />
                 <Route path="/search" element={<CitySearch />} />
+
+                {/* Community Feed / Shared Journeys */}
+                <Route path="/community" element={<CommunityPage />} />
                 
                 {/* Trip Budget */}
                 <Route path="/budget" element={<TripBudget />} />
@@ -49,6 +58,9 @@ export default function App() {
                 
                 {/* Profile */}
                 <Route path="/profile" element={<Profile />} />
+
+                {/* Admin Panel / Analytics Dashboard */}
+                <Route path="/admin" element={<AdminPage />} />
               </Route>
 
               {/* Fallback Redirect */}

@@ -30,7 +30,9 @@ export const Layout: React.FC = () => {
 
             <div className="flex flex-wrap justify-center items-center gap-6 text-xs font-semibold text-[#6B5E55]">
               <Link to="/trips" className="hover:text-[#964223] transition-colors">My Journeys</Link>
+              <Link to="/calendar" className="hover:text-[#964223] transition-colors">Calendar Timeline</Link>
               <Link to="/explore" className="hover:text-[#964223] transition-colors">Destinations</Link>
+              <Link to="/community" className="hover:text-[#964223] transition-colors">Community</Link>
               <Link to="/builder" className="hover:text-[#964223] transition-colors">Itinerary Builder</Link>
               <Link to="/budget" className="hover:text-[#964223] transition-colors">Budget Calculator</Link>
               <Link to="/profile" className="hover:text-[#964223] transition-colors">Traveler Settings</Link>

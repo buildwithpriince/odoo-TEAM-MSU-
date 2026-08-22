@@ -4,13 +4,15 @@ import { User } from '../types';
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
-  login: (email: string) => { success: boolean; error?: string };
-  signup: (email: string, name: string) => { success: boolean; error?: string };
+  login: (email: string, name?: string) => void;
+  signup: (email: string, name: string) => void;
   logout: () => void;
   updateProfile: (updatedData: Partial<User>) => void;
+  loginAsAdmin: () => void;
+  loginAsTraveler: () => void;
 }
 
-const DEFAULT_USER: User = {
+export const DEFAULT_TRAVELER_USER: User = {
   id: 'usr-101',
   name: 'Alex Morgan',
   email: 'alex.morgan@globetrotter.io',
@@ -18,7 +20,20 @@ const DEFAULT_USER: User = {
   homeCity: 'San Francisco, CA',
   currency: 'USD',
   bio: 'Passionate wanderer, coffee enthusiast, seeking authentic food stalls and hidden mountain trails.',
-  savedDestinations: ['Kyoto', 'Amalfi Coast', 'Cape Town']
+  savedDestinations: ['Kyoto', 'Amalfi Coast', 'Cape Town'],
+  role: 'traveler'
+};
+
+export const DEFAULT_ADMIN_USER: User = {
+  id: 'usr-admin-01',
+  name: 'Platform Administrator',
+  email: 'admin@globetrotter.io',
+  avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
+  homeCity: 'Global Operations',
+  currency: 'USD',
+  bio: 'GlobeTrotter platform administrator managing destinations, itineraries, and travel intelligence.',
+  savedDestinations: ['Jaipur', 'Tokyo', 'Paris'],
+  role: 'admin'
 };
 
 const CURRENT_USER_KEY = 'globetrotter_user';
@@ -66,12 +81,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const saved = localStorage.getItem(CURRENT_USER_KEY);
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.email) {
+          // Normalize role if not present
+          if (!parsed.role) {
+            parsed.role = parsed.email.toLowerCase().includes('admin') ? 'admin' : 'traveler';
+          }
+          return parsed;
+        }
+        return DEFAULT_TRAVELER_USER;
       } catch {
-        return null;
+        return DEFAULT_USER;
       }
     }
-    return null;
+    return DEFAULT_USER; // Default logged in for smooth preview experience
   });
 
   useEffect(() => {
@@ -82,42 +105,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [user]);
 
-  const signup = (email: string, name: string): { success: boolean; error?: string } => {
-    const key = normalizeEmail(email);
-    const users = loadRegisteredUsers();
-
-    if (users[key]) {
-      return { success: false, error: 'An account with this email already exists. Please sign in instead.' };
-    }
-
-    const newUser: User = {
+  const login = (email: string, name?: string) => {
+    const displayName = name || (email.split('@')[0].charAt(0).toUpperCase() + email.split('@')[0].slice(1));
+    setUser({
       id: 'usr-' + Date.now(),
-      name: name.trim(),
-      email: email.trim(),
+      name: displayName,
+      email,
       avatarUrl: DEFAULT_USER.avatarUrl,
-      homeCity: '',
+      homeCity: 'New York, NY',
       currency: 'USD',
       bio: 'Ready for my next adventure!',
       savedDestinations: []
-    };
-
-    users[key] = newUser;
-    saveRegisteredUsers(users);
-    setUser(newUser);
-    return { success: true };
+    });
   };
 
-  const login = (email: string): { success: boolean; error?: string } => {
-    const key = normalizeEmail(email);
-    const users = loadRegisteredUsers();
-    const found = users[key];
+  const loginAsAdmin = () => {
+    setUser(DEFAULT_ADMIN_USER);
+  };
 
-    if (!found) {
-      return { success: false, error: 'No account found for this email. Please sign up first.' };
-    }
+  const loginAsTraveler = () => {
+    setUser(DEFAULT_TRAVELER_USER);
+  };
 
-    setUser(found);
-    return { success: true };
+  const signup = (email: string, name: string) => {
+    login(email, name);
   };
 
   const logout = () => {
@@ -140,15 +151,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   };
 
+  const isAdmin = user?.role === 'admin' || user?.email?.toLowerCase().includes('admin') === true;
+
   return (
     <AuthContext.Provider
       value={{
         user,
         isAuthenticated: !!user,
+        isAdmin,
         login,
         signup,
         logout,
-        updateProfile
+        updateProfile,
+        loginAsAdmin,
+        loginAsTraveler
       }}
     >
       {children}

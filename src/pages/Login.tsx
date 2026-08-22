@@ -57,6 +57,15 @@ export const Login: React.FC = () => {
     }, 350);
   };
 
+  const handleAdminLogin = () => {
+    setIsLoading(true);
+    setTimeout(() => {
+      login('admin@globetrotter.io', 'Platform Administrator', 'admin');
+      setIsLoading(false);
+      navigate('/admin');
+    }, 350);
+  };
+
   return (
     <div className="min-h-[75vh] flex items-center justify-center py-8 px-4">
       <div className="w-full max-w-md space-y-6">
@@ -170,7 +179,7 @@ export const Login: React.FC = () => {
           </form>
 
           {/* Quick Demo Login Option */}
-          <div className="pt-2 border-t border-[#EAE2D5] text-center space-y-3">
+          <div className="pt-2 border-t border-[#EAE2D5] text-center space-y-2.5">
             <button
               type="button"
               onClick={handleDemoLogin}
@@ -179,6 +188,16 @@ export const Login: React.FC = () => {
             >
               <Sparkles className="w-3.5 h-3.5 text-[#964223]" />
               <span>Explore as Demo Traveler (Alex Morgan)</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleAdminLogin}
+              id="demo-admin-login-btn"
+              className="w-full py-2 rounded-xl bg-[#EBE7DF] hover:bg-[#E2DDD3] text-[#2C221E] text-xs font-bold transition-colors flex items-center justify-center gap-2 border border-[#D4C7B8] cursor-pointer"
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-[#4A6B70]" />
+              <span>Sign in as Administrator (Admin Console)</span>
             </button>
 
             <button
