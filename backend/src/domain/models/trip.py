@@ -4,6 +4,7 @@ from datetime import date
 from typing import Optional, List
 
 from .trip_stop import TripStop
+from .expense import Expense
 from ..enums.trip_status import TripStatus
 from ..rules.trip_rules import (
     validate_trip_dates,
@@ -15,7 +16,7 @@ from ..rules.trip_stop_rules import validate_stop_within_trip_dates
 
 @dataclass
 class Trip:
-    """Pure Python Domain Model for GlobeTrotter Trip entity with stops aggregate support.
+    """Pure Python Domain Model for GlobeTrotter Trip entity with stops and expenses aggregate support.
 
     Field Classification:
     ---------------------
@@ -30,6 +31,7 @@ class Trip:
         currency_code: ISO Currency code (default 'INR')
         state: Lifecycle status (TripStatus enum)
         stops: List of ordered TripStop domain models
+        expenses: List of non-activity Expense domain models
 
     Frontend Compatibility Fields:
         cover_image: Optional cover photo URL expected by frontend PRD
@@ -47,6 +49,7 @@ class Trip:
     cover_image: Optional[str] = None
     travel_vibe: Optional[str] = None
     stops: List[TripStop] = field(default_factory=list)
+    expenses: List[Expense] = field(default_factory=list)
 
     def __post_init__(self):
         self.validate()
@@ -102,6 +105,17 @@ class Trip:
         """Internal helper to maintain 1-based contiguous sequence numbering."""
         for idx, stop in enumerate(self.stops, start=1):
             stop.sequence = idx
+
+    def add_expense(self, expense: Expense) -> None:
+        """Adds a non-activity expense to the trip."""
+        expense.trip_id = self.id or 0
+        self.expenses.append(expense)
+
+    def remove_expense(self, expense_id: int) -> bool:
+        """Removes a non-activity expense by ID."""
+        initial_count = len(self.expenses)
+        self.expenses = [e for e in self.expenses if e.id != expense_id]
+        return len(self.expenses) < initial_count
 
     def update_dates(self, new_start: Optional[date], new_end: Optional[date]) -> None:
         """Updates dates and re-enforces domain date invariants across trip and child stops."""

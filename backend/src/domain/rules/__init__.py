@@ -51,6 +51,11 @@ from .trip_activity_rules import (
     validate_activity_within_stop_dates,
     validate_trip_activity_cost,
 )
+from .expense_rules import (
+    ExpenseDomainError,
+    InvalidExpenseAmountError,
+    validate_expense_amount,
+)
 
 __all__ = [
     "TripDomainError",
@@ -95,4 +100,7 @@ __all__ = [
     "validate_trip_stop_relationship",
     "validate_activity_within_stop_dates",
     "validate_trip_activity_cost",
+    "ExpenseDomainError",
+    "InvalidExpenseAmountError",
+    "validate_expense_amount",
 ]

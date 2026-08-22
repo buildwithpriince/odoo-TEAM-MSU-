@@ -24,6 +24,15 @@ from .trip_activity_schemas import (
     TripActivityUpdateRequest,
     TripActivityResponse,
 )
+from .itinerary_schemas import (
+    ItineraryDayResponse,
+    ItineraryResponse,
+)
+from .budget_schemas import (
+    BudgetBreakdownResponse,
+    DailyCostResponse,
+    BudgetSummaryResponse,
+)
 
 __all__ = [
     "TripCreateRequest",
@@ -38,8 +47,12 @@ __all__ = [
     "TripStopResponse",
     "ActivityCreateRequest",
     "ActivityResponse",
-    "TripStopCreateRequest",
     "TripActivityCreateRequest",
     "TripActivityUpdateRequest",
     "TripActivityResponse",
+    "ItineraryDayResponse",
+    "ItineraryResponse",
+    "BudgetBreakdownResponse",
+    "DailyCostResponse",
+    "BudgetSummaryResponse",
 ]
