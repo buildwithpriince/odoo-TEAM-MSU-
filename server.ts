@@ -25,12 +25,12 @@ async function startServer() {
 Return only the JSON object, with no markdown formatting or prose.`;
 
       const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents: prompt,
-        config: {
-            responseMimeType: "application/json"
-        }
-      });
+  model: "gemini-3.6-flash",
+  contents: prompt,
+  config: {
+    responseMimeType: "application/json",
+  },
+});
       
       const text = response.text || "{}";
       const data = JSON.parse(text);
@@ -84,7 +84,7 @@ Return only the JSON object, with no markdown formatting or prose.`;
   }
 
   app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server running on port ${PORT}`);
+   console.log(`Server running on http://localhost:${PORT}`);
   });
 }
 
