@@ -179,14 +179,14 @@ class TestTripServiceBehavior(unittest.TestCase):
             travel_vibe="Relaxation"
         )
         response_dto = TripResponse.from_domain(trip)
-        self.assertEqual(response_dto.id, 7)
+        self.assertEqual(response_dto.id, "7")
         self.assertEqual(response_dto.name, "Kerala Backwaters")
         self.assertEqual(response_dto.owner_id, 50)
         self.assertEqual(response_dto.start_date, "2026-11-01")
         self.assertEqual(response_dto.end_date, "2026-11-05")
         self.assertEqual(response_dto.duration_days, 5)
-        self.assertEqual(response_dto.state, "planned")
-        self.assertEqual(response_dto.cover_image, "https://example.com/kerala.jpg")
+        self.assertEqual(response_dto.status, "upcoming")
+        self.assertEqual(response_dto.coverImage, "https://example.com/kerala.jpg")
 
 
 if __name__ == '__main__':

@@ -27,7 +27,7 @@ class ItineraryService:
 
         itinerary_days: List[ItineraryDayResponse] = []
 
-        for d in dates:
+        for idx, d in enumerate(dates, start=1):
             d_str = d.isoformat()
 
             # 1. Determine associated city from TripStops covering date d
@@ -36,6 +36,9 @@ class ItineraryService:
                 None
             )
             city_dto = CityResponse.from_domain(active_stop.city) if (active_stop and active_stop.city) else None
+            city_name = active_stop.city.name if (active_stop and active_stop.city) else ""
+
+            day_title = f"Day {idx}" + (f" - {city_name}" if city_name else "")
 
             # 2. Collect activities scheduled on date d across all stops
             day_activities = []
@@ -58,7 +61,9 @@ class ItineraryService:
 
             itinerary_days.append(
                 ItineraryDayResponse(
+                    dayNumber=idx,
                     date=d_str,
+                    title=day_title,
                     city=city_dto,
                     activities=act_dtos,
                     daily_total_cost=round(daily_total, 2)

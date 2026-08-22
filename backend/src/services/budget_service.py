@@ -32,7 +32,7 @@ class BudgetService:
             for act in stop.activities
         )
 
-        # 3. Category Breakdown (no double-counting: Activity costs come from TripActivity, expenses from Expense)
+        # 3. Category Breakdown
         transport_cost = sum(e.amount for e in trip.expenses if e.category == ExpenseCategory.TRANSPORT)
         lodging_cost = sum(e.amount for e in trip.expenses if e.category == ExpenseCategory.ACCOMMODATION)
         meals_cost = sum(e.amount for e in trip.expenses if e.category == ExpenseCategory.MEALS)
@@ -90,11 +90,11 @@ class BudgetService:
 
         return BudgetSummaryResponse(
             trip_id=trip.id or trip_id,
-            target_budget=trip.target_budget,
-            total_estimated_cost=total_estimated_cost,
-            remaining_budget=remaining_budget,
-            average_per_day=average_per_day,
-            is_over_budget=is_over_budget,
+            totalBudget=trip.target_budget,
+            estimatedTotal=total_estimated_cost,
+            remaining=remaining_budget,
+            averagePerDay=average_per_day,
+            isOverBudget=is_over_budget,
             total_days=total_days,
             destination_count=destination_count,
             breakdown=breakdown,

@@ -8,14 +8,18 @@ from .trip_activity_schemas import TripActivityResponse
 
 @dataclass
 class ItineraryDayResponse:
+    dayNumber: int
     date: str
+    title: str
     city: Optional[CityResponse]
     activities: List[TripActivityResponse]
     daily_total_cost: float
 
     def to_dict(self) -> Dict[str, Any]:
         return {
+            "dayNumber": self.dayNumber,
             "date": self.date,
+            "title": self.title,
             "city": self.city.to_dict() if self.city else None,
             "activities": [a.to_dict() for a in self.activities],
             "daily_total_cost": self.daily_total_cost,
