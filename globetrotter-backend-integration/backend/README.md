@@ -1,24 +1,5 @@
 # GlobeTrotter Backend
 
-<<<<<<< HEAD
-Custom Odoo 17.0 backend application for **GlobeTrotter — Personalized Travel Planning Platform**.
-
-## Workspace Structure
-
-```text
-backend/
-├── addons/
-│   └── globetrotter/          # Custom Odoo module
-│       ├── __init__.py
-│       └── __manifest__.py
-└── README.md
-```
-
-## Odoo Module Details
-- **Module Name**: `globetrotter`
-- **Technical Path**: `backend/addons/globetrotter`
-- **Dependencies**: `base`
-=======
 Standalone backend for the existing GlobeTrotter frontend. The frontend UI is intentionally not included in this package.
 
 ## Stack
@@ -94,4 +75,3 @@ npm run build
 
 ## Production
 Build with `npm run build`, set `NODE_ENV=production`, provide a strong `JWT_SECRET`, and run `npm start`.
->>>>>>> origin/jeet
