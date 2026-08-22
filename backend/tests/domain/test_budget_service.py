@@ -4,6 +4,7 @@ import unittest
 
 from backend.src.domain.models.expense import Expense
 from backend.src.domain.enums.expense_category import ExpenseCategory
+from backend.src.infrastructure.database.connection import init_db, Base, engine
 from backend.src.services.trip_service import TripService
 from backend.src.services.city_service import CityService
 from backend.src.services.trip_stop_service import TripStopService
@@ -16,6 +17,10 @@ class TestBudgetServiceBehavior(unittest.TestCase):
     """Behavioral unit test suite for server-computed budget calculations."""
 
     def setUp(self):
+        init_db()
+        Base.metadata.drop_all(bind=engine)
+        Base.metadata.create_all(bind=engine)
+
         self.trip_service = TripService()
         self.city_service = CityService()
         self.stop_service = TripStopService(self.trip_service, self.city_service)
@@ -48,26 +53,24 @@ class TestBudgetServiceBehavior(unittest.TestCase):
         self.assertEqual(summary.destination_count, 2)
 
     def test_activity_cost_with_price_override(self):
-        # Catalog cost is ₹500. Add with trip override cost of ₹700
         self.trip_act_service.add_activity_to_stop(
             self.trip.id, self.stop1.id, self.act_jaipur.id, 1,
             cost_override=700.0
         )
 
         summary = self.budget_service.get_budget_summary(self.trip.id, requesting_user_id=1)
-
-        # Authoritative cost must use ₹700 (override), NOT catalog ₹500
         self.assertEqual(summary.breakdown.activities, 700.0)
-        self.assertEqual(summary.total_estimated_cost, 700.0)
+        self.assertEqual(summary.estimatedTotal, 700.0)
 
     def test_budget_breakdown_and_categories(self):
-        # Add activities
         self.trip_act_service.add_activity_to_stop(self.trip.id, self.stop1.id, self.act_jaipur.id, 1, cost_override=500.0)
 
-        # Add non-activity expenses
-        self.trip.add_expense(Expense(id=1, trip_id=self.trip.id, category=ExpenseCategory.TRANSPORT, amount=5000.0))
-        self.trip.add_expense(Expense(id=2, trip_id=self.trip.id, category=ExpenseCategory.ACCOMMODATION, amount=8000.0))
-        self.trip.add_expense(Expense(id=3, trip_id=self.trip.id, category=ExpenseCategory.MEALS, amount=2500.0))
+        # Add non-activity expenses and save to repository
+        trip = self.trip_service.get_trip(self.trip.id, 1)
+        trip.add_expense(Expense(id=None, trip_id=self.trip.id, category=ExpenseCategory.TRANSPORT, amount=5000.0))
+        trip.add_expense(Expense(id=None, trip_id=self.trip.id, category=ExpenseCategory.ACCOMMODATION, amount=8000.0))
+        trip.add_expense(Expense(id=None, trip_id=self.trip.id, category=ExpenseCategory.MEALS, amount=2500.0))
+        self.trip_service.trip_repository.save(trip)
 
         summary = self.budget_service.get_budget_summary(self.trip.id, requesting_user_id=1)
 
@@ -77,38 +80,39 @@ class TestBudgetServiceBehavior(unittest.TestCase):
         self.assertEqual(summary.breakdown.meals, 2500.0)
         self.assertEqual(summary.breakdown.misc, 0.0)
 
-        # Total = 5000 + 8000 + 500 + 2500 = 16000
-        self.assertEqual(summary.total_estimated_cost, 16000.0)
-        self.assertEqual(summary.remaining_budget, 9000.0)
-        self.assertEqual(summary.average_per_day, round(16000.0 / 6, 2))
-        self.assertFalse(summary.is_over_budget)
+        self.assertEqual(summary.estimatedTotal, 16000.0)
+        self.assertEqual(summary.remaining, 9000.0)
+        self.assertEqual(summary.averagePerDay, round(16000.0 / 6, 2))
+        self.assertFalse(summary.isOverBudget)
 
     def test_over_budget_calculation(self):
-        # Target budget is 25000. Add 30000 expense
-        self.trip.add_expense(Expense(id=1, trip_id=self.trip.id, category=ExpenseCategory.TRANSPORT, amount=30000.0))
+        trip = self.trip_service.get_trip(self.trip.id, 1)
+        trip.add_expense(Expense(id=None, trip_id=self.trip.id, category=ExpenseCategory.TRANSPORT, amount=30000.0))
+        self.trip_service.trip_repository.save(trip)
 
         summary = self.budget_service.get_budget_summary(self.trip.id, requesting_user_id=1)
 
-        self.assertTrue(summary.is_over_budget)
-        self.assertEqual(summary.remaining_budget, -5000.0)
+        self.assertTrue(summary.isOverBudget)
+        self.assertEqual(summary.remaining, -5000.0)
 
     def test_budget_recalculation_on_state_change(self):
         ta = self.trip_act_service.add_activity_to_stop(self.trip.id, self.stop1.id, self.act_jaipur.id, 1, cost_override=1000.0)
         summary1 = self.budget_service.get_budget_summary(self.trip.id, requesting_user_id=1)
-        self.assertEqual(summary1.total_estimated_cost, 1000.0)
+        self.assertEqual(summary1.estimatedTotal, 1000.0)
 
         # Remove activity -> recalculates instantly
         self.trip_act_service.remove_activity_from_stop(self.trip.id, self.stop1.id, ta.id, 1)
         summary2 = self.budget_service.get_budget_summary(self.trip.id, requesting_user_id=1)
-        self.assertEqual(summary2.total_estimated_cost, 0.0)
+        self.assertEqual(summary2.estimatedTotal, 0.0)
 
     def test_no_double_counting(self):
-        # Activity is 500. Adding expense for transport 1000. Total = 1500
         self.trip_act_service.add_activity_to_stop(self.trip.id, self.stop1.id, self.act_jaipur.id, 1, cost_override=500.0)
-        self.trip.add_expense(Expense(id=1, trip_id=self.trip.id, category=ExpenseCategory.TRANSPORT, amount=1000.0))
+        trip = self.trip_service.get_trip(self.trip.id, 1)
+        trip.add_expense(Expense(id=None, trip_id=self.trip.id, category=ExpenseCategory.TRANSPORT, amount=1000.0))
+        self.trip_service.trip_repository.save(trip)
 
         summary = self.budget_service.get_budget_summary(self.trip.id, requesting_user_id=1)
-        self.assertEqual(summary.total_estimated_cost, 1500.0)
+        self.assertEqual(summary.estimatedTotal, 1500.0)
         self.assertEqual(summary.breakdown.activities, 500.0)
         self.assertEqual(summary.breakdown.transport, 1000.0)
 

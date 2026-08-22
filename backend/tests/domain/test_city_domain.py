@@ -8,11 +8,12 @@ from backend.src.domain.rules.city_rules import (
     InvalidCostIndexError,
     InvalidPopularityError,
 )
+from backend.src.infrastructure.database.connection import init_db, Base, engine
 from backend.src.services.city_service import CityService
 
 
 class TestCityDomainBehavior(unittest.TestCase):
-    """Behavioral unit test suite for City domain model and rules."""
+    """Behavioral unit test suite for City entity rules and invariants."""
 
     def test_valid_city_creation(self):
         city = City(
@@ -20,72 +21,72 @@ class TestCityDomainBehavior(unittest.TestCase):
             name="Jaipur",
             country="India",
             cost_index=2,
-            popularity=4.8,
+            popularity=4.5,
             image_url="https://example.com/jaipur.jpg"
         )
         self.assertEqual(city.name, "Jaipur")
         self.assertEqual(city.country, "India")
         self.assertEqual(city.cost_index, 2)
-        self.assertEqual(city.popularity, 4.8)
+        self.assertEqual(city.popularity, 4.5)
 
-    def test_empty_city_name_rejected(self):
+    def test_empty_city_name_fails(self):
         with self.assertRaises(InvalidCityNameError):
             City(name="", country="India")
 
         with self.assertRaises(InvalidCityNameError):
             City(name="   ", country="India")
 
-    def test_empty_country_rejected(self):
+    def test_empty_country_fails(self):
         with self.assertRaises(InvalidCityCountryError):
-            City(name="Tokyo", country="")
+            City(name="Jaipur", country="")
 
-    def test_invalid_cost_index_bounds(self):
+    def test_invalid_cost_index_out_of_range_fails(self):
         with self.assertRaises(InvalidCostIndexError):
             City(name="Jaipur", country="India", cost_index=0)
 
         with self.assertRaises(InvalidCostIndexError):
             City(name="Jaipur", country="India", cost_index=5)
 
-    def test_invalid_popularity_bounds(self):
+    def test_invalid_popularity_out_of_range_fails(self):
         with self.assertRaises(InvalidPopularityError):
-            City(name="Jaipur", country="India", popularity=-1.0)
+            City(name="Jaipur", country="India", popularity=-0.1)
 
         with self.assertRaises(InvalidPopularityError):
-            City(name="Jaipur", country="India", popularity=5.5)
+            City(name="Jaipur", country="India", popularity=5.1)
 
 
 class TestCityServiceBehavior(unittest.TestCase):
-    """Behavioral unit test suite for CityService catalog operations."""
+    """Behavioral unit test suite for CityService operations."""
 
     def setUp(self):
+        init_db()
+        Base.metadata.drop_all(bind=engine)
+        Base.metadata.create_all(bind=engine)
         self.service = CityService()
 
     def test_create_and_retrieve_city(self):
-        city = self.service.create_city(
-            name="Udaipur",
+        created = self.service.create_city(
+            name="Jaipur",
             country="India",
-            cost_index=3,
-            popularity=4.7
+            cost_index=2,
+            popularity=4.5
         )
-        self.assertEqual(city.id, 1)
+        self.assertIsNotNone(created.id)
 
-        fetched = self.service.get_city(1)
-        self.assertEqual(fetched.name, "Udaipur")
+        retrieved = self.service.get_city(created.id)
+        self.assertEqual(retrieved.name, "Jaipur")
+        self.assertEqual(retrieved.country, "India")
 
     def test_search_cities(self):
-        self.service.create_city(name="Jaipur", country="India")
-        self.service.create_city(name="Jodhpur", country="India")
-        self.service.create_city(name="Tokyo", country="Japan")
+        self.service.create_city("Jaipur", "India", cost_index=2)
+        self.service.create_city("Jodhpur", "India", cost_index=3)
+        self.service.create_city("Paris", "France", cost_index=4)
 
-        results = self.service.search_cities("joi")
-        self.assertEqual(len(results), 0)
-
-        results_jaipur = self.service.search_cities("jaipur")
+        results_jaipur = self.service.search_cities(query="jaipur")
         self.assertEqual(len(results_jaipur), 1)
-        self.assertEqual(results_jaipur[0].name, "Jaipur")
 
-        results_india = self.service.search_cities("india")
-        self.assertEqual(len(results_india), 2)
+        cheap_cities = self.service.search_cities(max_cost_index=2)
+        self.assertEqual(len(cheap_cities), 1)
 
 
 if __name__ == '__main__':

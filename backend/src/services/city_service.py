@@ -8,7 +8,11 @@ from ..infrastructure.repositories.interfaces import ICityRepository
 class CityService:
     """Domain service managing destination cities catalog backed by repository persistence."""
 
-    def __init__(self, city_repository: ICityRepository):
+    def __init__(self, city_repository: Optional[ICityRepository] = None):
+        if city_repository is None:
+            from ..infrastructure.repositories.sqlalchemy_repositories import SqlAlchemyCityRepository
+            from ..infrastructure.database.connection import SessionLocal
+            city_repository = SqlAlchemyCityRepository(SessionLocal)
         self.city_repository = city_repository
 
     def create_city(

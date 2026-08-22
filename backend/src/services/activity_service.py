@@ -10,7 +10,15 @@ from ..infrastructure.repositories.interfaces import IActivityRepository
 class ActivityService:
     """Domain service for managing reusable catalog activities backed by repository persistence."""
 
-    def __init__(self, city_service: CityService, activity_repository: IActivityRepository):
+    def __init__(
+        self,
+        city_service: CityService,
+        activity_repository: Optional[IActivityRepository] = None,
+    ):
+        if activity_repository is None:
+            from ..infrastructure.repositories.sqlalchemy_repositories import SqlAlchemyActivityRepository
+            from ..infrastructure.database.connection import SessionLocal
+            activity_repository = SqlAlchemyActivityRepository(SessionLocal)
         self.city_service = city_service
         self.activity_repository = activity_repository
 

@@ -11,7 +11,11 @@ from ..infrastructure.repositories.interfaces import ITripRepository
 class TripService:
     """Domain service for managing Trip aggregate lifecycle backed by repository persistence."""
 
-    def __init__(self, trip_repository: ITripRepository):
+    def __init__(self, trip_repository: Optional[ITripRepository] = None):
+        if trip_repository is None:
+            from ..infrastructure.repositories.sqlalchemy_repositories import SqlAlchemyTripRepository
+            from ..infrastructure.database.connection import SessionLocal
+            trip_repository = SqlAlchemyTripRepository(SessionLocal)
         self.trip_repository = trip_repository
 
     def create_trip(
@@ -51,7 +55,7 @@ class TripService:
         if not trip:
             raise KeyError(f"Trip with ID {trip_id} not found.")
 
-        check_trip_ownership(trip, requesting_user_id)
+        check_trip_ownership(trip.owner_id, requesting_user_id)
         return trip
 
     def list_user_trips(self, owner_id: int) -> List[Trip]:

@@ -23,7 +23,7 @@ class InvalidActivityCostError(ActivityDomainError):
 
 
 class InvalidActivityDurationError(ActivityDomainError):
-    """Raised when duration_minutes is negative."""
+    """Raised when duration_minutes is less than or equal to 0."""
     pass
 
 
@@ -46,8 +46,8 @@ def validate_activity_cost(cost: float) -> None:
 
 
 def validate_activity_duration(duration_minutes: int) -> None:
-    """Enforces non-negative duration in minutes."""
-    if duration_minutes < 0:
+    """Enforces positive duration in minutes (>= 1)."""
+    if duration_minutes <= 0:
         raise InvalidActivityDurationError(
-            f"Activity duration_minutes cannot be negative, got: {duration_minutes}"
+            f"Activity duration_minutes must be positive (>= 1), got: {duration_minutes}"
         )

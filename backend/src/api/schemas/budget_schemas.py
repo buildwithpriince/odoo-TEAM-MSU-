@@ -62,6 +62,37 @@ class BudgetSummaryResponse:
     def is_over_budget(self) -> bool:
         return self.isOverBudget
 
+    @classmethod
+    def from_domain(cls, b: Any) -> "BudgetSummaryResponse":
+        bd = BudgetBreakdownResponse(
+            transport=b.category_breakdown.get("transport", 0.0),
+            accommodation=b.category_breakdown.get("accommodation", 0.0),
+            activities=b.category_breakdown.get("activities", 0.0),
+            meals=b.category_breakdown.get("meals", 0.0),
+            misc=b.category_breakdown.get("misc", 0.0),
+        )
+        dcs = [
+            DailyCostResponse(
+                date=dc["date"],
+                activity_cost=dc["activity_cost"],
+                expense_cost=dc["expense_cost"],
+                total=dc["total"],
+            )
+            for dc in b.daily_costs
+        ]
+        return cls(
+            trip_id=b.trip_id,
+            totalBudget=b.target_budget,
+            estimatedTotal=b.total_estimated_cost,
+            remaining=b.remaining_budget,
+            averagePerDay=b.average_per_day,
+            isOverBudget=b.is_over_budget,
+            total_days=b.total_days,
+            destination_count=b.destination_count,
+            breakdown=bd,
+            daily_costs=dcs,
+        )
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "trip_id": self.trip_id,
