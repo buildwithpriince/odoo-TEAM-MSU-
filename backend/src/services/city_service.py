@@ -1,51 +1,50 @@
 # -*- coding: utf-8 -*-
-from typing import Dict, List, Optional
+from typing import List, Optional
 
 from ..domain.models.city import City
+from ..infrastructure.repositories.interfaces import ICityRepository
 
 
 class CityService:
-    """Domain service for managing reusable City destinations."""
+    """Domain service managing destination cities catalog backed by repository persistence."""
 
-    def __init__(self):
-        self._store: Dict[int, City] = {}
-        self._next_id: int = 1
+    def __init__(self, city_repository: ICityRepository):
+        self.city_repository = city_repository
 
     def create_city(
         self,
         name: str,
         country: str,
         cost_index: int = 1,
-        popularity: float = 4.0,
+        popularity: float = 0.0,
         image_url: Optional[str] = None,
     ) -> City:
-        """Creates and validates a new reusable City entity."""
+        """Creates and persists a new destination City entity."""
         city = City(
-            id=self._next_id,
+            id=None,
             name=name,
             country=country,
             cost_index=cost_index,
             popularity=popularity,
             image_url=image_url,
         )
-        self._store[self._next_id] = city
-        self._next_id += 1
-        return city
+        return self.city_repository.save(city)
 
     def get_city(self, city_id: int) -> City:
         """Retrieves a City by ID."""
-        if city_id not in self._store:
+        city = self.city_repository.get_by_id(city_id)
+        if not city:
             raise KeyError(f"City with ID {city_id} not found.")
-        return self._store[city_id]
+        return city
 
     def list_cities(self) -> List[City]:
         """Lists all registered destination cities."""
-        return list(self._store.values())
+        return self.city_repository.list_all()
 
-    def search_cities(self, query: str) -> List[City]:
-        """Searches cities by name or country case-insensitively."""
-        q = query.lower().strip()
-        return [
-            c for c in self._store.values()
-            if q in c.name.lower() or q in c.country.lower()
-        ]
+    def search_cities(
+        self,
+        query: Optional[str] = None,
+        max_cost_index: Optional[int] = None,
+    ) -> List[City]:
+        """Searches cities filtered by query string or cost index."""
+        return self.city_repository.search(query=query, max_cost_index=max_cost_index)

@@ -1,18 +1,18 @@
 # -*- coding: utf-8 -*-
 from datetime import date
-from typing import Dict, List, Optional
+from typing import List, Optional
 
 from ..domain.models.trip import Trip
 from ..domain.enums.trip_status import TripStatus
 from ..domain.rules.trip_rules import check_trip_ownership
+from ..infrastructure.repositories.interfaces import ITripRepository
 
 
 class TripService:
-    """Domain service orchestrating Trip entity lifecycle, persistence abstraction, and authorization."""
+    """Domain service for managing Trip aggregate lifecycle backed by repository persistence."""
 
-    def __init__(self):
-        self._store: Dict[int, Trip] = {}
-        self._next_id: int = 1
+    def __init__(self, trip_repository: ITripRepository):
+        self.trip_repository = trip_repository
 
     def create_trip(
         self,
@@ -26,9 +26,12 @@ class TripService:
         cover_image: Optional[str] = None,
         travel_vibe: Optional[str] = None,
     ) -> Trip:
-        """Instantiates and validates a new Trip domain model for an authenticated user."""
+        """Creates and persists a new Trip entity after validating domain rules."""
+        if owner_id <= 0:
+            raise ValueError(f"Trip owner_id must be a valid positive user ID, got: {owner_id}")
+
         trip = Trip(
-            id=self._next_id,
+            id=None,
             name=name,
             description=description,
             owner_id=owner_id,
@@ -40,21 +43,22 @@ class TripService:
             cover_image=cover_image,
             travel_vibe=travel_vibe,
         )
-        self._store[self._next_id] = trip
-        self._next_id += 1
-        return trip
+        return self.trip_repository.save(trip)
 
     def get_trip(self, trip_id: int, requesting_user_id: int) -> Trip:
-        """Retrieves a trip by ID, checking canonical ownership authorization."""
-        if trip_id not in self._store:
+        """Retrieves a Trip by ID and enforces owner identity access authorization."""
+        trip = self.trip_repository.get_by_id(trip_id)
+        if not trip:
             raise KeyError(f"Trip with ID {trip_id} not found.")
-        trip = self._store[trip_id]
-        check_trip_ownership(trip.owner_id, requesting_user_id)
+
+        check_trip_ownership(trip, requesting_user_id)
         return trip
 
     def list_user_trips(self, owner_id: int) -> List[Trip]:
-        """Lists all trips owned by the specified user ID."""
-        return [t for t in self._store.values() if t.owner_id == owner_id]
+        """Lists all Trips belonging to a specific owner_id."""
+        if owner_id <= 0:
+            raise ValueError(f"Owner ID must be positive, got: {owner_id}")
+        return self.trip_repository.list_by_owner(owner_id)
 
     def update_trip(
         self,
@@ -97,10 +101,9 @@ class TripService:
         if travel_vibe is not None:
             trip.travel_vibe = travel_vibe
 
-        return trip
+        return self.trip_repository.save(trip)
 
     def delete_trip(self, trip_id: int, requesting_user_id: int) -> bool:
         """Deletes a trip owned by the requesting user."""
-        trip = self.get_trip(trip_id, requesting_user_id)
-        del self._store[trip.id]
-        return True
+        self.get_trip(trip_id, requesting_user_id)
+        return self.trip_repository.delete(trip_id)

@@ -5,7 +5,6 @@ from typing import List, Optional
 from ..domain.models.trip_activity import TripActivity
 from ..domain.rules.trip_activity_rules import (
     validate_activity_city_matches_stop_city,
-    validate_trip_stop_relationship,
     validate_activity_within_stop_dates,
 )
 from .trip_service import TripService
@@ -15,7 +14,7 @@ from .activity_service import ActivityService
 
 
 class TripActivityService:
-    """Domain service managing scheduled TripActivity selections on trip stops."""
+    """Domain service managing scheduled TripActivity selections backed by aggregate persistence."""
 
     def __init__(
         self,
@@ -28,7 +27,6 @@ class TripActivityService:
         self.city_service = city_service
         self.trip_stop_service = trip_stop_service
         self.activity_service = activity_service
-        self._next_trip_activity_id: int = 1
 
     def add_activity_to_stop(
         self,
@@ -63,7 +61,7 @@ class TripActivityService:
         selected_cost = cost_override if cost_override is not None else activity.cost
 
         trip_activity = TripActivity(
-            id=self._next_trip_activity_id,
+            id=None,
             trip_id=trip.id or trip_id,
             stop_id=stop.id or stop_id,
             activity_id=activity.id or activity_id,
@@ -74,9 +72,9 @@ class TripActivityService:
             notes=notes,
             activity=activity,
         )
-        self._next_trip_activity_id += 1
 
         stop.add_activity(trip_activity)
+        self.trip_service.trip_repository.save(trip)
         return trip_activity
 
     def update_trip_activity(
@@ -120,6 +118,7 @@ class TripActivityService:
         if notes is not None:
             act.notes = notes
 
+        self.trip_service.trip_repository.save(trip)
         return act
 
     def remove_activity_from_stop(
@@ -138,4 +137,6 @@ class TripActivityService:
         removed = stop.remove_activity(trip_activity_id)
         if not removed:
             raise KeyError(f"TripActivity with ID {trip_activity_id} not found in Stop {stop_id}.")
+
+        self.trip_service.trip_repository.save(trip)
         return True

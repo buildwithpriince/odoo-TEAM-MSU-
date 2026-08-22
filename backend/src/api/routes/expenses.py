@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 from datetime import date
 from typing import List, Optional
 from fastapi import APIRouter, Depends, status, Response
@@ -25,14 +25,13 @@ def add_expense(
     req: ExpenseCreateRequest,
     user_id: int = Depends(get_requesting_user_id)
 ) -> dict:
-    """Adds a non-activity expense to a trip."""
+    """Adds a non-activity expense to a trip and persists it."""
     trip = trip_service.get_trip(trip_id, user_id)
     exp_d = date.fromisoformat(req.expense_date) if req.expense_date else None
     cat_enum = ExpenseCategory(req.category.lower()) if req.category else ExpenseCategory.MISC
 
-    new_id = (max([e.id for e in trip.expenses if e.id], default=0) + 1)
     expense = Expense(
-        id=new_id,
+        id=None,
         trip_id=trip.id or trip_id,
         category=cat_enum,
         description=req.description,
@@ -40,13 +39,16 @@ def add_expense(
         expense_date=exp_d,
     )
     trip.add_expense(expense)
+    trip_service.trip_repository.save(trip)
+
+    saved_exp = trip.expenses[-1]
     return {
-        "id": str(expense.id),
-        "trip_id": expense.trip_id,
-        "category": expense.category.value,
-        "description": expense.description,
-        "amount": expense.amount,
-        "expense_date": expense.expense_date.isoformat() if expense.expense_date else None,
+        "id": str(saved_exp.id),
+        "trip_id": saved_exp.trip_id,
+        "category": saved_exp.category.value,
+        "description": saved_exp.description,
+        "amount": saved_exp.amount,
+        "expense_date": saved_exp.expense_date.isoformat() if saved_exp.expense_date else None,
     }
 
 
@@ -81,4 +83,6 @@ def remove_expense(
     removed = trip.remove_expense(expense_id)
     if not removed:
         raise KeyError(f"Expense with ID {expense_id} not found in Trip {trip_id}.")
+
+    trip_service.trip_repository.save(trip)
     return Response(status_code=status.HTTP_204_NO_CONTENT)

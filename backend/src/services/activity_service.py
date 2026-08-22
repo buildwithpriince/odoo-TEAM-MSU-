@@ -1,18 +1,18 @@
 # -*- coding: utf-8 -*-
-from typing import Dict, List, Optional
+from typing import List, Optional
 
 from ..domain.models.activity import Activity
 from ..domain.enums.activity_category import ActivityCategory
 from .city_service import CityService
+from ..infrastructure.repositories.interfaces import IActivityRepository
 
 
 class ActivityService:
-    """Domain service for managing reusable catalog activities by destination city."""
+    """Domain service for managing reusable catalog activities backed by repository persistence."""
 
-    def __init__(self, city_service: CityService):
+    def __init__(self, city_service: CityService, activity_repository: IActivityRepository):
         self.city_service = city_service
-        self._store: Dict[int, Activity] = {}
-        self._next_id: int = 1
+        self.activity_repository = activity_repository
 
     def create_activity(
         self,
@@ -27,7 +27,7 @@ class ActivityService:
         """Creates a reusable catalog activity after confirming destination city exists."""
         city = self.city_service.get_city(city_id)
         activity = Activity(
-            id=self._next_id,
+            id=None,
             name=name,
             city_id=city.id or city_id,
             category=category,
@@ -36,23 +36,22 @@ class ActivityService:
             description=description,
             image_url=image_url,
         )
-        self._store[self._next_id] = activity
-        self._next_id += 1
-        return activity
+        return self.activity_repository.save(activity)
 
     def get_activity(self, activity_id: int) -> Activity:
         """Retrieves a catalog Activity by ID."""
-        if activity_id not in self._store:
+        act = self.activity_repository.get_by_id(activity_id)
+        if not act:
             raise KeyError(f"Activity with ID {activity_id} not found.")
-        return self._store[activity_id]
+        return act
 
     def list_activities(self) -> List[Activity]:
         """Lists all registered catalog activities."""
-        return list(self._store.values())
+        return self.activity_repository.search()
 
     def list_activities_by_city(self, city_id: int) -> List[Activity]:
         """Lists all catalog activities for a specific city."""
-        return [a for a in self._store.values() if a.city_id == city_id]
+        return self.activity_repository.list_by_city(city_id)
 
     def search_activities(
         self,
@@ -62,22 +61,9 @@ class ActivityService:
         max_cost: Optional[float] = None,
     ) -> List[Activity]:
         """Searches activities filtered by city, category, query string, and max cost."""
-        results = list(self._store.values())
-
-        if city_id is not None:
-            results = [a for a in results if a.city_id == city_id]
-
-        if category is not None:
-            results = [a for a in results if a.category == category]
-
-        if max_cost is not None:
-            results = [a for a in results if a.cost <= max_cost]
-
-        if query:
-            q = query.lower().strip()
-            results = [
-                a for a in results
-                if q in a.name.lower() or q in a.description.lower()
-            ]
-
-        return results
+        return self.activity_repository.search(
+            city_id=city_id,
+            category=category,
+            query=query,
+            max_cost=max_cost
+        )
